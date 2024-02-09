@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.Runtime.InteropServices;
-using MDOL;
 using System.Drawing;
 
 namespace FlexibleEyeController
@@ -16,15 +15,15 @@ namespace FlexibleEyeController
         {
             return GetType().Name + ": " + DefaultToString();
         }
-        public IO.XML toXML(string name)
+        public MDOL.IO.XML toXML(string name)
         {
-            return new IO.XML(name,
-                new IO.XML[] { new IO.XML("Type", GetType().Name) }.Concat(toxml()).ToArray());
+            return new MDOL.IO.XML(name,
+                new MDOL.IO.XML[] { new MDOL.IO.XML("Type", GetType().Name) }.Concat(toxml()).ToArray());
         }
         public abstract string InfoString();
         public abstract string DefaultToString();
-        protected abstract IO.XML[] toxml();
-        public static Output fromXML(IO.XML xml)
+        protected abstract MDOL.IO.XML[] toxml();
+        public static Output fromXML(MDOL.IO.XML xml)
         {
             switch (xml.getString("Type", ""))
             {
@@ -99,9 +98,9 @@ namespace FlexibleEyeController
             }
             public int X = 0;
             public int Y = 0;
-            protected override IO.XML[] toxml()
+            protected override MDOL.IO.XML[] toxml()
             {
-                return new IO.XML[] { new MDOL.IO.XML("X", X.ToString()), new MDOL.IO.XML("Y", Y.ToString())};
+                return new MDOL.IO.XML[] { new MDOL.IO.XML("X", X.ToString()), new MDOL.IO.XML("Y", Y.ToString())};
             }
             public override string DefaultToString()
             {
@@ -130,9 +129,9 @@ namespace FlexibleEyeController
             }
             public enum JoystickActions { LeftAnalog,RightAnalog};
             public JoystickActions JoystickAction = JoystickActions.LeftAnalog;
-            protected override IO.XML[] toxml()
+            protected override MDOL.IO.XML[] toxml()
             {
-                return new IO.XML[]{new IO.XML("JoystickAction", ((int)JoystickAction).ToString())};
+                return new MDOL.IO.XML[]{new MDOL.IO.XML("JoystickAction", ((int)JoystickAction).ToString())};
             }
             public override string DefaultToString()
             { 
@@ -181,11 +180,11 @@ namespace FlexibleEyeController
             int down = -1;
             int up = -1;
             public System.Windows.Forms.MouseButtons Button = System.Windows.Forms.MouseButtons.Left;
-            protected override IO.XML[] toxml()
+            protected override MDOL.IO.XML[] toxml()
             {
-                return new IO.XML[]{
-                    new IO.XML("X", X.ToString()), new IO.XML("Y", Y.ToString()),
-                    new IO.XML("Button", ((int)Button).ToString())};
+                return new MDOL.IO.XML[]{
+                    new MDOL.IO.XML("X", X.ToString()), new MDOL.IO.XML("Y", Y.ToString()),
+                    new MDOL.IO.XML("Button", ((int)Button).ToString())};
             }
             public override string DefaultToString()
             {
@@ -247,9 +246,9 @@ namespace FlexibleEyeController
             {
                 return System.IO.Path.GetFileNameWithoutExtension(File.FileName);
             }
-            protected override IO.XML[] toxml()
+            protected override MDOL.IO.XML[] toxml()
             {
-                return new IO.XML[] { new IO.XML("File", File.FileName) };
+                return new MDOL.IO.XML[] { new MDOL.IO.XML("File", File.FileName) };
             }
         }
         public class ChangePage : Output
@@ -267,9 +266,9 @@ namespace FlexibleEyeController
             {
                 return (Page>0 ? "+" : "") + Page.ToString();
             }
-            protected override IO.XML[] toxml()
+            protected override MDOL.IO.XML[] toxml()
             {
-                return new IO.XML[] { new IO.XML("Page", Page.ToString())};
+                return new MDOL.IO.XML[] { new MDOL.IO.XML("Page", Page.ToString())};
             }
         }
         public class KeyPress : Output
@@ -279,9 +278,9 @@ namespace FlexibleEyeController
                 return "Click on the button, to choose which key is pressed on activiation";
             }
             public System.Windows.Forms.Keys Key = System.Windows.Forms.Keys.None;
-            protected override IO.XML[] toxml()
+            protected override MDOL.IO.XML[] toxml()
             {
-                return new IO.XML[] { new IO.XML("Key", ((int)Key).ToString()) };
+                return new MDOL.IO.XML[] { new MDOL.IO.XML("Key", ((int)Key).ToString()) };
             }
             public override string DefaultToString()
             {

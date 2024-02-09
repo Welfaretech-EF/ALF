@@ -37,7 +37,7 @@ namespace FlexibleEyeController
             this.nudUnlockTime = new System.Windows.Forms.NumericUpDown();
             this.grpOutput = new System.Windows.Forms.GroupBox();
             this.txtFieldInfo = new System.Windows.Forms.TextBox();
-            this.pnlOutput = new MDOL.EditablePanel();
+            this.pnlOutput = new EditablePanel();
             this.cmdAdd = new System.Windows.Forms.Button();
             this.lstOutputs = new System.Windows.Forms.ListBox();
             this.grpInput = new System.Windows.Forms.GroupBox();
@@ -204,7 +204,7 @@ namespace FlexibleEyeController
         private System.Windows.Forms.Button cmdDelete;
         private System.Windows.Forms.CheckBox chkCircular;
         private System.Windows.Forms.GroupBox grpOutput;
-        private MDOL.EditablePanel pnlOutput;
+        private EditablePanel pnlOutput;
         private System.Windows.Forms.Button cmdAdd;
         private System.Windows.Forms.ListBox lstOutputs;
         private System.Windows.Forms.GroupBox grpInput;

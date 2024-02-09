@@ -30,6 +30,8 @@ namespace FlexibleEyeController
         }
         public void Save()
         {
+            
+
             MDOL.IO.XML[] pages_xml = lstPages.Items.Cast<Page>().Select((page, i) => page.toXML("Page_" + i)).ToArray();
             MDOL.IO.XML xml = new MDOL.IO.XML("Pages",
                 new MDOL.IO.XML[] {

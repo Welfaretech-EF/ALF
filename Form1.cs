@@ -75,7 +75,9 @@ namespace FlexibleEyeController
             FORM1 = this;
             InitializeComponent();
             WinAPI.SetProcessDPIAware();
-            
+
+            Location = new Point(0, (Screen.PrimaryScreen.Bounds.Height-Height) / 2);
+
             FormClosing += (s, e) =>
             {
                 if (xbox360Controller != null)

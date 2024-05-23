@@ -50,9 +50,12 @@ namespace FlexibleEyeController
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         public static extern void mouse_event(int dwFlags, int dx, int dy, uint cButtons, uint dwExtraInfo);
 
+        [DllImport("user32.dll")]
+        public static extern byte MapVirtualKey(int uCode, uint uMapType);
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
+        public static extern void keybd_event(int bVk, byte bScan, int dwFlags, int dwExtraInfo);
         public const int KEYEVENT_KEYDOWN = 0x0000;
+        public const int KEYEVENTF_EXTENDEDKEY = 0x0001;
         public const int KEYEVENT_KEYUP = 0x0002;
 
 

@@ -16,6 +16,27 @@ namespace FlexibleEyeController
         {
             InitializeComponent();
 
+            cmdSave.Click += (s, e) =>
+              {
+                  Close();
+              };
+
+            Color[] colors = new Color[] { Color.Black, Color.Gray, Color.Red, Color.Green, Color.Blue, Color.Cyan, Color.Magenta, Color.Yellow };
+            cmbActivationColor.Items.AddRange(colors.Cast<object>().ToArray());
+            cmbWaitColor.Items.AddRange(colors.Cast<object>().ToArray());
+            cmbIdleColor.Items.AddRange(colors.Cast<object>().ToArray());
+
+            cmbActivationColor.SelectedItem = overlay.ColorActive;
+            cmbWaitColor.SelectedItem = overlay.ColorWaiting;
+            cmbIdleColor.SelectedItem = overlay.ColorIdle;
+
+            cmbWaitColor.SelectedIndexChanged += (s, e) => { overlay.ColorWaiting = (Color)cmbWaitColor.SelectedItem; };
+            cmbIdleColor.SelectedIndexChanged += (s, e) => { overlay.ColorIdle = (Color)cmbIdleColor.SelectedItem; };
+            cmbActivationColor.SelectedIndexChanged += (s, e) => { overlay.ColorActive = (Color)cmbActivationColor.SelectedItem; };
+
+            nudTransaparency.Value = overlay.Transparency;
+            nudTransaparency.ValueChanged += (s, e) => { overlay.Transparency = (int)nudTransaparency.Value; };
+
             Timer tmrCursor = new Timer();
             tmrCursor.Interval = 100;
             tmrCursor.Tick += (s, e) =>
@@ -27,6 +48,8 @@ namespace FlexibleEyeController
             nudUnlockTime.Value = (decimal)(overlay.UnlockTime / 1000.0);
             chkToggleOnActivation.Checked = overlay.ToggleOnActivation;
             chkCircular.Checked = overlay.Circular;
+            nudCircularX.Value = overlay.CircularX;
+            nudCircularY.Value = overlay.CircularY;
             txtDescription.Text = overlay.Description;
 
             lstOutputs.Items.Clear();
@@ -75,6 +98,14 @@ namespace FlexibleEyeController
             chkCircular.CheckedChanged += (s, e) =>
             {
                 overlay.Circular = chkCircular.Checked;
+            };
+            nudCircularX.ValueChanged+=(s,e)=>
+            {
+                overlay.CircularX = (int)nudCircularX.Value;
+            };
+            nudCircularY.ValueChanged += (s, e) =>
+            {
+                overlay.CircularY = (int)nudCircularY.Value;
             };
             nudUnlockTime.ValueChanged += (s, e) =>
             {

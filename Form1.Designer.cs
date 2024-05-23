@@ -59,9 +59,9 @@ namespace FlexibleEyeController
             this.chkEnableOverlays.AutoSize = true;
             this.chkEnableOverlays.Location = new System.Drawing.Point(12, 56);
             this.chkEnableOverlays.Name = "chkEnableOverlays";
-            this.chkEnableOverlays.Size = new System.Drawing.Size(168, 17);
+            this.chkEnableOverlays.Size = new System.Drawing.Size(165, 17);
             this.chkEnableOverlays.TabIndex = 2;
-            this.chkEnableOverlays.Text = "Enable Overlays (Ctrl+Shift+Q)";
+            this.chkEnableOverlays.Text = "Enable Overlays (Alt+Shift+Q)";
             this.chkEnableOverlays.UseVisualStyleBackColor = true;
             this.chkEnableOverlays.CheckedChanged += new System.EventHandler(this.chkEnableOverlays_CheckedChanged);
             // 

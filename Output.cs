@@ -43,7 +43,8 @@ namespace FlexibleEyeController
                 case "KeyPress":
                     return new KeyPress()
                     {
-                        Key = (System.Windows.Forms.Keys)xml.getInt("Key", 0)
+                        Key = (System.Windows.Forms.Keys)xml.getInt("Key", 0),
+                        ExtendedKey = xml.getBool("ExtendedKey", false)
                     };
                 case "ChangeFile":
                     return new ChangeFile()
@@ -118,7 +119,7 @@ namespace FlexibleEyeController
             }
             protected override void circularActivate(PointF Direction)
             {
-                WinAPI.mouse_event(WinAPI.MOUSEEVENT_MOVE, (int)(Direction.X * X), (int)(Direction.Y * -Y), 0, 0);
+                WinAPI.mouse_event(WinAPI.MOUSEEVENT_MOVE, (int)(Direction.X * X), (int)(Direction.Y * Y), 0, 0);
             }
         }
         public class Joystick : Output
@@ -127,44 +128,83 @@ namespace FlexibleEyeController
             {
                 return "Choose joystick action";
             }
-            public enum JoystickActions { LeftAnalog,RightAnalog};
+            public enum JoystickActions { LeftAnalog, RightAnalog, 
+                A,
+                B,
+                Back,
+                Down,
+                Guide,
+                Left,
+                LeftShoulder,
+                LeftThumb,
+                Right,
+                RightShoulder,
+                RightThumb,
+                Start,
+                Up,
+                X,
+                Y
+            };
+            Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button[] buttons = new Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button[] {
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.A,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.B,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.Back,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.Down,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.Guide,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.Left,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.LeftShoulder,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.LeftThumb,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.Right,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.RightShoulder,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.RightThumb,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.Start,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.Up,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.X,
+                Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Button.Y
+            };
+
             public JoystickActions JoystickAction = JoystickActions.LeftAnalog;
             protected override MDOL.IO.XML[] toxml()
             {
-                return new MDOL.IO.XML[]{new MDOL.IO.XML("JoystickAction", ((int)JoystickAction).ToString())};
+                return new MDOL.IO.XML[] { new MDOL.IO.XML("JoystickAction", ((int)JoystickAction).ToString()) };
             }
             public override string DefaultToString()
-            { 
-                return "";
+            {
+                return Form1.xbox360Controller == null ? "Disabled" : "";
             }
             protected override void activate()
             {
+                int i = (int)JoystickAction - 2;
+                if (i >= 0)
+                    Form1.xbox360Controller?.SetButtonState(buttons[i], true);
             }
             protected override void deactivate()
             {
-                switch (JoystickAction)
+                int i = (int)JoystickAction - 2;
+                if (i == -2)
                 {
-                    case JoystickActions.LeftAnalog:
-                        Form1.xbox360Controller.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.LeftThumbX, 0);
-                        Form1.xbox360Controller.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.LeftThumbY, 0);
-                        break;
-                    case JoystickActions.RightAnalog:
-                        Form1.xbox360Controller.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.RightThumbX, 0);
-                        Form1.xbox360Controller.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.RightThumbY, 0);
-                        break;
+                    Form1.xbox360Controller?.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.LeftThumbX, 0);
+                    Form1.xbox360Controller?.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.LeftThumbY, 0);
                 }
+                else if (i == -1)
+                {
+                    Form1.xbox360Controller?.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.RightThumbX, 0);
+                    Form1.xbox360Controller?.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.RightThumbY, 0);
+                }
+                else
+                    Form1.xbox360Controller?.SetButtonState(buttons[i], false);
             }
             protected override void circularActivate(PointF Direction)
             {
                 switch (JoystickAction)
                 {
                     case JoystickActions.LeftAnalog:
-                        Form1.xbox360Controller.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.LeftThumbX, (short)(Direction.X * 32768));
-                        Form1.xbox360Controller.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.LeftThumbY, (short)(-Direction.Y * 32768));
+                        Form1.xbox360Controller?.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.LeftThumbX, (short)(Direction.X * 32767));
+                        Form1.xbox360Controller?.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.LeftThumbY, (short)(-Direction.Y * 32767));
                         break;
                     case JoystickActions.RightAnalog:
-                        Form1.xbox360Controller.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.RightThumbX, (short)(Direction.X * 32768));
-                        Form1.xbox360Controller.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.RightThumbY, (short)(-Direction.Y * 32768));
+                        Form1.xbox360Controller?.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.RightThumbX, (short)(Direction.X * 32767));
+                        Form1.xbox360Controller?.SetAxisValue(Nefarius.ViGEm.Client.Targets.Xbox360.Xbox360Axis.RightThumbY, (short)(-Direction.Y * 32767));
                         break;
                 }
             }
@@ -240,7 +280,7 @@ namespace FlexibleEyeController
             public System.Windows.Forms.OpenFileDialog File = new System.Windows.Forms.OpenFileDialog() { Filter = "XML Files | *.xml" };
             protected override void activate()
             {
-                Form1.FORM1.Load(File.FileName);
+                Form1.FORM1.LoadFile(File.FileName);
             }
             public override string DefaultToString()
             {
@@ -278,9 +318,13 @@ namespace FlexibleEyeController
                 return "Click on the button, to choose which key is pressed on activiation";
             }
             public System.Windows.Forms.Keys Key = System.Windows.Forms.Keys.None;
+            public bool ExtendedKey = false;
             protected override MDOL.IO.XML[] toxml()
             {
-                return new MDOL.IO.XML[] { new MDOL.IO.XML("Key", ((int)Key).ToString()) };
+                return new MDOL.IO.XML[] { 
+                    new MDOL.IO.XML("Key", ((int)Key).ToString()),
+                    new MDOL.IO.XML("ExtendedKey", ExtendedKey.ToString())
+                };
             }
             public override string DefaultToString()
             {
@@ -288,11 +332,11 @@ namespace FlexibleEyeController
             }
             protected override void activate()
             {
-                WinAPI.keybd_event((byte)Key, 0, WinAPI.KEYEVENT_KEYDOWN, 0);
+                WinAPI.keybd_event((int)Key, WinAPI.MapVirtualKey((int)Key, 0), WinAPI.KEYEVENT_KEYDOWN | (ExtendedKey ? WinAPI.KEYEVENTF_EXTENDEDKEY : 0), 0);
             }
             protected override void deactivate()
             {
-                WinAPI.keybd_event((byte)Key, 0, WinAPI.KEYEVENT_KEYUP, 0);
+                WinAPI.keybd_event((int)Key, WinAPI.MapVirtualKey((int)Key, 0), WinAPI.KEYEVENT_KEYUP | (ExtendedKey ? WinAPI.KEYEVENTF_EXTENDEDKEY : 0), 0);
             }
         }
     }

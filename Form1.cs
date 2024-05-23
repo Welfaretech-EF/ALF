@@ -30,8 +30,6 @@ namespace FlexibleEyeController
         }
         public void Save()
         {
-            
-
             MDOL.IO.XML[] pages_xml = lstPages.Items.Cast<Page>().Select((page, i) => page.toXML("Page_" + i)).ToArray();
             MDOL.IO.XML xml = new MDOL.IO.XML("Pages",
                 new MDOL.IO.XML[] {
@@ -40,7 +38,7 @@ namespace FlexibleEyeController
             System.IO.File.WriteAllText(currentFile, xml.ToString(0));
             System.IO.File.WriteAllText("latestFile.txt", currentFile);
         }
-        public void Load(string File)
+        public void LoadFile(string File)
         {
             if (System.IO.File.Exists(File))
             {
@@ -70,8 +68,42 @@ namespace FlexibleEyeController
         public static Nefarius.ViGEm.Client.Targets.IXbox360Controller xbox360Controller;
         public Form1()
         {
-            xbox360Controller = new Nefarius.ViGEm.Client.ViGEmClient().CreateXbox360Controller();
-            xbox360Controller.Connect();
+            try
+            {
+                xbox360Controller = new Nefarius.ViGEm.Client.ViGEmClient().CreateXbox360Controller();
+                xbox360Controller.Connect();
+            }
+            catch (Nefarius.ViGEm.Client.Exceptions.VigemBusNotFoundException ex)
+            {
+                System.IO.File.AppendAllText("Debug.txt", ex.Message);
+                if (MessageBox.Show("In order to simulate joysticks, the ViGEm Bus Driver must be installed - click yes to download and install version 1.22.0 (November, 2023)", "ViGEm Bus Driver not found!", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    using (var client = new System.Net.WebClient())
+                    {
+                        client.DownloadFile("https://github.com/nefarius/ViGEmBus/releases/download/v1.22.0/ViGEmBus_1.22.0_x64_x86_arm64.exe", "ViGEmBus_1.22.0_x64_x86_arm64.exe");
+                        var process = new System.Diagnostics.Process();
+                        process.StartInfo.UseShellExecute = false;
+                        process.StartInfo.CreateNoWindow = true;
+                        process.StartInfo.RedirectStandardOutput = true;
+                        process.StartInfo.RedirectStandardError = true;
+                        process.StartInfo.FileName = "ViGEmBus_1.22.0_x64_x86_arm64.exe";
+
+                        process.Start();
+                        process.WaitForExit();
+                        process.Dispose();
+
+                        try
+                        {
+                            xbox360Controller = new Nefarius.ViGEm.Client.ViGEmClient().CreateXbox360Controller();
+                            xbox360Controller.Connect();
+                        }
+                        catch (Nefarius.ViGEm.Client.Exceptions.VigemBusNotFoundException exNew)
+                        {
+                            MessageBox.Show("Something went wrong - the driver is still missing!");
+                        }
+                    }
+                }
+            }
             FORM1 = this;
             InitializeComponent();
             WinAPI.SetProcessDPIAware();
@@ -86,35 +118,70 @@ namespace FlexibleEyeController
                     host.Dispose();
             };
 
-            host = new Tobii.Interaction.Host();
-            gazePointDataStream = host.Streams.CreateGazePointDataStream();
-
-            gazePointDataStream.GazePoint((gazePointX, gazePointY, _) =>
+            try
             {
-                double X = gazePointX;
-                double Y = gazePointY;
-                XY[0] = X;
-                XY[1] = Y;
-            });
+                host = new Tobii.Interaction.Host();
+                gazePointDataStream = host.Streams.CreateGazePointDataStream();
+                gazePointDataStream.GazePoint((gazePointX, gazePointY, _) =>
+                {
+                    double X = gazePointX;
+                    double Y = gazePointY;
+                    XY[0] = X;
+                    XY[1] = Y;
+                });
+            }
+            catch (DllNotFoundException ex)
+            {
+                host = null;
+                MessageBox.Show("Tobii.EyeX.Client.dll is missing!");
+            }
 
-            bool CtrlShiftQ = false;
+            bool AltShiftQ = false;
+            bool Ctrl = false;
+
             Timer tmr = new Timer();
-            tmr.Interval = 20;
+            tmr.Interval = 40;
             tmr.Tick += (s, e) =>
             {
-                if (!Overlay.isEditing &&
-                System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.LeftShift) &&
-                System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.LeftCtrl) &&
-                System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.Q))
+                if (!Overlay.isEditing)
                 {
-                    if (!CtrlShiftQ)
+                    if (
+                    System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.LeftAlt) &&
+                    System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.LeftShift) &&
+                    System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.Q))
                     {
-                        chkEnableOverlays.Checked = !chkEnableOverlays.Checked;
-                        CtrlShiftQ = true;
+                        if (!AltShiftQ)
+                        {
+                            chkEnableOverlays.Checked = !chkEnableOverlays.Checked;
+                            AltShiftQ = true;
+                        }
+                    }
+                    else
+                        AltShiftQ = false;
+                    if (!chkEnableOverlays.Checked && System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.LeftCtrl))
+                    {
+                        if (!Ctrl)
+                        {
+                            Ctrl = true;
+                            if (lstPages.SelectedItem != null)
+                                ((Page)lstPages.SelectedItem).CtrlDown(Cursor.Position);
+                        }
+                        else
+                            if (lstPages.SelectedItem != null)
+                                ((Page)lstPages.SelectedItem).CtrlMove(Cursor.Position);
+                    }
+                    else if (Ctrl)
+                    { 
+                        if (lstPages.SelectedItem != null)
+                            ((Page)lstPages.SelectedItem).CtrlUp();
+                        Ctrl = false;
                     }
                 }
                 else
-                    CtrlShiftQ = false;
+                {
+                    AltShiftQ = false;
+                    Ctrl = false;
+                }
                 if (chkEnableOverlays.Checked)
                 {
                     if (chkMouseAsGaze.Checked)
@@ -129,9 +196,7 @@ namespace FlexibleEyeController
             tmr.Start();
             cmdAdd.Click += (s, e) =>
             {
-                lstPages.Items.Add(new Page());
-                lstPages.SelectedIndex = lstPages.Items.Count - 1;
-                Save();
+                NewPage();
             };
             bool ignorePageChange = false;
             txtPageName.TextChanged += (s, e) =>
@@ -170,11 +235,21 @@ namespace FlexibleEyeController
             if (System.IO.File.Exists("latestFile.txt"))
                 latestFile = System.IO.File.ReadAllText("latestFile.txt");
             if (latestFile != "" && System.IO.File.Exists(latestFile))
-                Load(latestFile);
+                LoadFile(latestFile);
             else
+            {
+                MessageBox.Show("It seems like it is the first time you are using FlexibleEyeController. Please choose your first file, where data will be stored. Name it according to the game or software, you would like to control.");
                 newToolStripMenuItem_Click(null, null);
+            }
         }
-        double[] XY = new double[2] { -1, -1 };
+        double[] XY = new double[2] { double.PositiveInfinity, double.PositiveInfinity };
+
+        void NewPage()
+        {
+            lstPages.Items.Add(new Page());
+            lstPages.SelectedIndex = lstPages.Items.Count - 1;
+            Save();
+        }
 
         class Page
         {
@@ -256,12 +331,33 @@ namespace FlexibleEyeController
                 foreach (Overlay overlay in Overlays)
                     overlay.Tobii(XY[0], XY[1]);
             }
+            Overlay overlayCtrl = null;
+            public void CtrlDown(Point XY)
+            {
+                foreach (Overlay overlay in Overlays)
+                    if (overlay.CtrlDown(XY))
+                    {
+                        overlayCtrl = overlay;
+                        return;
+                    }
+            }
+            public void CtrlMove(Point XY)
+            {
+                if (overlayCtrl != null)
+                    overlayCtrl.CtrlMove(XY);
+            }
+            public void CtrlUp()
+            {
+                if (overlayCtrl != null)
+                    overlayCtrl.CtrlUp();
+                overlayCtrl = null;
+            }
             public void Play(bool Enabled)
             {
                 foreach (Overlay overlay in Overlays)
                 {
                     overlay.Play(Enabled);
-                    overlay.Tobii(-1, -1);
+                    overlay.Tobii(double.PositiveInfinity, double.PositiveInfinity);
                 }
             }
             public MDOL.IO.XML toXML(string name)
@@ -292,7 +388,7 @@ namespace FlexibleEyeController
             if (lstPages.SelectedItem != null)
                 ((Page)lstPages.SelectedItem).Play(chkEnableOverlays.Checked);
         }
-        SaveFileDialog sfd = new SaveFileDialog() { Filter = "XML Files | *.xml" };
+        SaveFileDialog sfd = new SaveFileDialog() { Filter = "XML Files | *.xml",InitialDirectory = Application.StartupPath};
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (sfd.ShowDialog() == DialogResult.OK)
@@ -302,7 +398,7 @@ namespace FlexibleEyeController
                 lstPages.Items.Clear();
                 currentFile = sfd.FileName;
                 Text = System.IO.Path.GetFileNameWithoutExtension(currentFile);
-                cmdAdd.PerformClick();
+                NewPage();
             }
         }
 
@@ -310,7 +406,7 @@ namespace FlexibleEyeController
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (ofd.ShowDialog() == DialogResult.OK)
-                Load(ofd.FileName);
+                LoadFile(ofd.FileName);
         }
     }
 }

@@ -37,21 +37,24 @@ namespace FlexibleEyeController
             this.lblDescription.AutoSize = true;
             this.lblDescription.BackColor = System.Drawing.Color.Transparent;
             this.lblDescription.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblDescription.Location = new System.Drawing.Point(12, 9);
+            this.lblDescription.Location = new System.Drawing.Point(16, 11);
+            this.lblDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblDescription.Name = "lblDescription";
-            this.lblDescription.Size = new System.Drawing.Size(0, 31);
+            this.lblDescription.Size = new System.Drawing.Size(0, 39);
             this.lblDescription.TabIndex = 0;
+            this.lblDescription.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // OverlayForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.ClientSize = new System.Drawing.Size(167, 103);
+            this.ClientSize = new System.Drawing.Size(223, 127);
             this.Controls.Add(this.lblDescription);
             this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "OverlayForm";
             this.Opacity = 0.5D;
             this.ShowIcon = false;

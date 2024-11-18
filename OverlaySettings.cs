@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace FlexibleEyeController
 {
@@ -145,6 +146,13 @@ namespace FlexibleEyeController
               {
                   cmdAdd.ContextMenu.Show(cmdAdd, Point.Empty);
               };
+            cmdClone.Click += (s, e) =>
+            {
+                Overlay clone = new Overlay(overlay.toXML("overlay"));
+                clone.Bounds.X += 0.1f;
+                clone.Bounds.Y += 0.1f;
+                Form1.FORM1.AddOverlay(clone);
+            };
         }
         bool ignoreChange = false;
         void AddOutput(Output output)

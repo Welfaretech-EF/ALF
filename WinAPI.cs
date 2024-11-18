@@ -31,6 +31,9 @@ namespace FlexibleEyeController
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int y, int cx, int cy, SetWindowPosEnum uFlags);
 
+        [DllImport("user32.dll")]
+        public static extern int SetCursorPos(int x, int y);
+
         public const uint WS_EX_LAYERED = 0x00080000;
         public const uint WS_EX_TRANSPARENT = 0x00000020;
         [DllImport("user32.dll", SetLastError = true)]

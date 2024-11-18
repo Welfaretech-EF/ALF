@@ -36,7 +36,6 @@ namespace FlexibleEyeController
                     new MDOL.IO.XML("nPages",lstPages.Items.Count.ToString())
                 }.Concat(pages_xml).ToArray());
             System.IO.File.WriteAllText(currentFile, xml.ToString(0));
-            System.IO.File.WriteAllText("latestFile.txt", currentFile);
         }
         public void LoadFile(string File)
         {
@@ -59,6 +58,8 @@ namespace FlexibleEyeController
                     if (lstPages.Items.Count > 0)
                         lstPages.SelectedIndex = 0;
                 }
+                frmSettings.PrevFile = currentFile;
+                frmSettings.SaveSettings();
             }
         }
 
@@ -68,6 +69,20 @@ namespace FlexibleEyeController
         public static Nefarius.ViGEm.Client.Targets.IXbox360Controller xbox360Controller;
         public Form1()
         {
+            Resize += (s, e) =>
+            {
+                if (WindowState == FormWindowState.Minimized)
+                {
+                    if (lstPages.SelectedItem != null)
+                        ((Page)lstPages.SelectedItem).Close();
+                }
+                else
+                {
+                    if (lstPages.SelectedItem != null)
+                        ((Page)lstPages.SelectedItem).Show();
+                }
+            };
+
             try
             {
                 xbox360Controller = new Nefarius.ViGEm.Client.ViGEmClient().CreateXbox360Controller();
@@ -108,7 +123,7 @@ namespace FlexibleEyeController
             InitializeComponent();
             WinAPI.SetProcessDPIAware();
 
-            Location = new Point(0, (Screen.PrimaryScreen.Bounds.Height-Height) / 2);
+            Location = new Point(0, (Screen.PrimaryScreen.Bounds.Height-Height) * 2 / 3);
 
             FormClosing += (s, e) =>
             {
@@ -130,10 +145,19 @@ namespace FlexibleEyeController
                     XY[1] = Y;
                 });
             }
-            catch (DllNotFoundException ex)
+            catch (Exception ex)
             {
                 host = null;
-                MessageBox.Show("Tobii.EyeX.Client.dll is missing!");
+                if (ex.GetType().Equals(typeof(DllNotFoundException)))
+                {
+                    MessageBox.Show("Tobii.EyeX.Client.dll is missing!");
+                }
+                else if (ex.GetType().Equals(typeof(BadImageFormatException)))
+                {
+                    MessageBox.Show("The application seems to be compiled for the wrong version of Tobii.EyeX.Client.dll (32/64 bit)");
+                }
+                else
+                    MessageBox.Show(ex.Message);
             }
 
             bool AltShiftQ = false;
@@ -167,8 +191,10 @@ namespace FlexibleEyeController
                                 ((Page)lstPages.SelectedItem).CtrlDown(Cursor.Position);
                         }
                         else
+                        {
                             if (lstPages.SelectedItem != null)
                                 ((Page)lstPages.SelectedItem).CtrlMove(Cursor.Position);
+                        }
                     }
                     else if (Ctrl)
                     { 
@@ -231,16 +257,16 @@ namespace FlexibleEyeController
                 }
             };
 
-            string latestFile = "";
-            if (System.IO.File.Exists("latestFile.txt"))
-                latestFile = System.IO.File.ReadAllText("latestFile.txt");
-            if (latestFile != "" && System.IO.File.Exists(latestFile))
-                LoadFile(latestFile);
-            else
+            settingsToolStripMenuItem.Click += (s, e) =>
             {
-                MessageBox.Show("It seems like it is the first time you are using FlexibleEyeController. Please choose your first file, where data will be stored. Name it according to the game or software, you would like to control.");
-                newToolStripMenuItem_Click(null, null);
-            }
+                new frmSettings().ShowDialog();
+            };
+
+            frmSettings.LoadSettings();
+            if (frmSettings.StartupFile != "" && System.IO.File.Exists(frmSettings.StartupFile))
+                LoadFile(frmSettings.StartupFile);
+            if (frmSettings.EnableOverlaysOnStartup)
+                chkEnableOverlays.Checked = true;
         }
         double[] XY = new double[2] { double.PositiveInfinity, double.PositiveInfinity };
 
@@ -321,6 +347,11 @@ namespace FlexibleEyeController
                 foreach (Overlay overlay in Overlays)
                     overlay.Show();
             }
+            public void Hide()
+            {
+                foreach (Overlay overlay in Overlays)
+                    overlay.Hide();
+            }
             public void Close()
             {
                 foreach (Overlay overlay in Overlays)
@@ -373,13 +404,22 @@ namespace FlexibleEyeController
 
         private void cmdAddOverlay_Click(object sender, EventArgs e)
         {
-            if (lstPages.SelectedItem != null)
+            Overlay overlay = new Overlay();
+            if (AddOverlay(overlay))
             {
-                Overlay overlay = new Overlay();
                 ((Page)lstPages.SelectedItem).Add(overlay);
-                overlay.Show();
                 overlay.Change();
             }
+        }
+        public bool AddOverlay(Overlay overlay)
+        {
+            if (lstPages.SelectedItem != null)
+            {
+                ((Page)lstPages.SelectedItem).Add(overlay);
+                overlay.Show();
+                return true;
+            }
+            return false;
         }
 
         private void chkEnableOverlays_CheckedChanged(object sender, EventArgs e)

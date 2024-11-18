@@ -14,7 +14,6 @@ namespace FlexibleEyeController
     public class Overlay
     {
         public bool ToggleOnActivation = false;
-        public MouseButtons mouseButton = MouseButtons.None;
         public string Description = "";
         public MDOL.IO.XML toXML(string name)
         {
@@ -126,7 +125,23 @@ namespace FlexibleEyeController
             }
         }
 
-        OverlayForm frm = null;
+        int gridSteps = 40;
+        Point Grid(int X,int Y)
+        {
+            return new Point(GridX(X), GridY(Y));
+        }
+        int GridX(int X)
+        {
+            int w = Screen.PrimaryScreen.Bounds.Width;
+            return frmSettings.GridSnap ? ((int)((double)gridSteps * X / w)) * w / gridSteps : X;
+        }
+        int GridY(int Y)
+        {
+            int h = Screen.PrimaryScreen.Bounds.Height;
+            return frmSettings.GridSnap ? ((int)((double)gridSteps * Y / h)) * h / gridSteps : Y;
+        }
+
+        public OverlayForm frm = null;
         public void Show()
         {
             if (frm != null)
@@ -155,20 +170,21 @@ namespace FlexibleEyeController
 
             tmrMove.Tick += (s, e) =>
             {
-                if (mouseDownOffset != Point.Empty)
-                    frm.Location = new Point(Cursor.Position.X - mouseDownOffset.X, Cursor.Position.Y - mouseDownOffset.Y);
+                if (mouseDownOffset != Point.Empty) {
+                    frm.Location = Grid(Cursor.Position.X - mouseDownOffset.X, Cursor.Position.Y - mouseDownOffset.Y);
+                }
                 else
                 {
                     Rectangle bounds = frm.Bounds;
                     if (mouseDownWidth == 1)
-                        bounds.Width = Cursor.Position.X - frm.Left;
-                    else if(mouseDownWidth == -1)
-                    { 
-                        bounds.Width = frm.Right-Cursor.Position.X;
+                        bounds.Width = GridX(Cursor.Position.X - frm.Left);
+                    else if (mouseDownWidth == -1)
+                    {
+                        bounds.Width = frm.Right - Cursor.Position.X;
                         bounds.X = Cursor.Position.X;
                     }
                     if (mouseDownHeight == 1)
-                        bounds.Height = Cursor.Position.Y - frm.Top;
+                        bounds.Height = GridY(Cursor.Position.Y - frm.Top);
                     else if (mouseDownHeight == -1)
                     {
                         bounds.Height = frm.Bottom - Cursor.Position.Y;
@@ -196,40 +212,46 @@ namespace FlexibleEyeController
             };
             frm.MouseDown += (s, e) =>
             {
-                float x = (float)e.Location.X / frm.Width;
-                float y = (float)e.Location.Y / frm.Height;
-                Point mouseDownScreen = frm.PointToScreen(e.Location);
+                if (e.Button == MouseButtons.Left)
+                {
+                    float x = (float)e.Location.X / frm.Width;
+                    float y = (float)e.Location.Y / frm.Height;
+                    Point mouseDownScreen = frm.PointToScreen(e.Location);
 
-                if (x > 1 - border)
-                    mouseDownWidth = 1;
-                else if (x < border)
-                    mouseDownWidth = -1;
-                else
-                    mouseDownWidth = 0;
-                if (y > 1 - border)
-                    mouseDownHeight = 1;
-                else if (y < border)
-                    mouseDownHeight = -1;
-                else
-                    mouseDownHeight = 0;
+                    if (x > 1 - border)
+                        mouseDownWidth = 1;
+                    else if (x < border)
+                        mouseDownWidth = -1;
+                    else
+                        mouseDownWidth = 0;
+                    if (y > 1 - border)
+                        mouseDownHeight = 1;
+                    else if (y < border)
+                        mouseDownHeight = -1;
+                    else
+                        mouseDownHeight = 0;
 
-                if (mouseDownWidth == 0 && mouseDownHeight == 0)
-                    mouseDownOffset = new Point(mouseDownScreen.X - frm.Left, mouseDownScreen.Y - frm.Top);
-                tmrMove.Start();
+                    if (mouseDownWidth == 0 && mouseDownHeight == 0)
+                        mouseDownOffset = new Point(mouseDownScreen.X - frm.Left, mouseDownScreen.Y - frm.Top);
+                    tmrMove.Start();
+                }
             };
             frm.MouseUp += (s, e) =>
             {
-                tmrMove.Stop();
-                mouseDownOffset = Point.Empty;
-                mouseDownHeight = 0;
-                mouseDownWidth = 0;
-                if (frm == null)
-                    return;
-                Bounds = new RectangleF((float)frm.Bounds.X / Screen.PrimaryScreen.Bounds.Width,
-                    (float)frm.Bounds.Y / Screen.PrimaryScreen.Bounds.Height,
-                    (float)frm.Bounds.Width / Screen.PrimaryScreen.Bounds.Width,
-                    (float)frm.Bounds.Height / Screen.PrimaryScreen.Bounds.Height);
-                saveBounds();
+                if (e.Button == MouseButtons.Left)
+                {
+                    tmrMove.Stop();
+                    mouseDownOffset = Point.Empty;
+                    mouseDownHeight = 0;
+                    mouseDownWidth = 0;
+                    if (frm == null)
+                        return;
+                    Bounds = new RectangleF((float)frm.Bounds.X / Screen.PrimaryScreen.Bounds.Width,
+                        (float)frm.Bounds.Y / Screen.PrimaryScreen.Bounds.Height,
+                        (float)frm.Bounds.Width / Screen.PrimaryScreen.Bounds.Width,
+                        (float)frm.Bounds.Height / Screen.PrimaryScreen.Bounds.Height);
+                    saveBounds();
+                }
             };
             frm.DoubleClick += (s, e) =>
             {
@@ -313,6 +335,10 @@ namespace FlexibleEyeController
                 (float)frm.Bounds.Width / Screen.PrimaryScreen.Bounds.Width,
                 (float)frm.Bounds.Height / Screen.PrimaryScreen.Bounds.Height);
             saveBounds();
+        }
+        public void Hide()
+        {
+            frm.Hide();
         }
         public void Close()
         {
@@ -486,7 +512,7 @@ namespace FlexibleEyeController
                     else
                     {
                         foreach (Output output in outputs)
-                            output.Activate();
+                            output.Activate(this);
                     }
                 }
                 else

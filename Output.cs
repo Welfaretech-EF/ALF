@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using System.Runtime.InteropServices;
 using System.Drawing;
+using System.Threading;
 
 namespace FlexibleEyeController
 {
@@ -38,7 +39,8 @@ namespace FlexibleEyeController
                     {
                         X = xml.getInt("X", -1),
                         Y = xml.getInt("Y", -1),
-                        Button = (System.Windows.Forms.MouseButtons)xml.getInt("mouseButton", 0)
+                        CenterClick = xml.getBool("CenterClick",false),
+                        Button = (System.Windows.Forms.MouseButtons)xml.getInt("Button", 0)
                     };
                 case "KeyPress":
                     return new KeyPress()
@@ -67,8 +69,10 @@ namespace FlexibleEyeController
         }
         bool Activated = false;
         protected abstract void activate();
-        public void Activate()
+        Overlay overlay;
+        public void Activate(Overlay overlay)
         {
+            this.overlay = overlay;
             if (!Activated)
             {
                 Activated = true;
@@ -213,17 +217,22 @@ namespace FlexibleEyeController
         {
             public override string InfoString()
             {
-                return "Choose the button, which should be activated. The (X,Y)-values indicates where the click should happen. If a value of '-1' is chosen, the click will happen on the current mouse location. Otherwise, the mouse will be moved to the chosen location, before the click.";
+                return "Choose the button, which should be activated. " +
+                    "The (X,Y)-values indicates where the click should happen. " +
+                    "If a value of '-1' is chosen, the click will happen on the current mouse location. " +
+                    "Otherwise, the mouse will be moved to the chosen location, before the click. " +
+                    "Centerclick will move the mouse to the center of the overlay";
             }
             public int X = -1;
             public int Y = -1;
-            int down = -1;
-            int up = -1;
+            public bool CenterClick = false;
+            int down,up;
             public System.Windows.Forms.MouseButtons Button = System.Windows.Forms.MouseButtons.Left;
             protected override MDOL.IO.XML[] toxml()
             {
                 return new MDOL.IO.XML[]{
                     new MDOL.IO.XML("X", X.ToString()), new MDOL.IO.XML("Y", Y.ToString()),
+                    new MDOL.IO.XML("CenterClick", CenterClick.ToString()),
                     new MDOL.IO.XML("Button", ((int)Button).ToString())};
             }
             public override string DefaultToString()
@@ -232,6 +241,8 @@ namespace FlexibleEyeController
             }
             void Update()
             {
+                down = -1;
+                up = -1;
                 switch (Button)
                 {
                     case System.Windows.Forms.MouseButtons.Left:
@@ -251,24 +262,38 @@ namespace FlexibleEyeController
             protected override void activate()
             {
                 Update();
-                if (down != -1)
+                int X = this.X;
+                int Y = this.Y;
+                if (X == -1)
+                    X = System.Windows.Forms.Cursor.Position.X;
+                if (Y == -1)
+                    Y = System.Windows.Forms.Cursor.Position.Y;
+                if (CenterClick)
                 {
-                    int X = this.X == -1 ? System.Windows.Forms.Cursor.Position.X : this.X;
-                    int Y = this.Y == -1 ? System.Windows.Forms.Cursor.Position.Y : this.Y;
-                    WinAPI.mouse_event(down, X, Y, 0, 0);
+                    X = (overlay.frm.Bounds.Left + overlay.frm.Bounds.Right) / 2;
+                    Y = (overlay.frm.Bounds.Bottom + overlay.frm.Bounds.Top) / 2;
                 }
+                WinAPI.SetCursorPos(X, Y);
+                if (down != -1)
+                    WinAPI.mouse_event(down, X, Y, 0, 0);
             }
             protected override void deactivate()
             {
-                Update();
-                int X = this.X;
-                int Y = this.Y;
-                if (X == -1 && Y == -1)
+                if (up != -1)
                 {
-                    X = System.Windows.Forms.Cursor.Position.X;
-                    Y = System.Windows.Forms.Cursor.Position.Y;
+                    int X = this.X;
+                    int Y = this.Y;
+                    if (X == -1)
+                        X = System.Windows.Forms.Cursor.Position.X;
+                    if (Y == -1)
+                        Y = System.Windows.Forms.Cursor.Position.Y;
+                    if (CenterClick)
+                    {
+                        X = (overlay.frm.Bounds.Left + overlay.frm.Bounds.Right) / 2;
+                        Y = (overlay.frm.Bounds.Bottom + overlay.frm.Bounds.Top) / 2;
+                    }
+                    WinAPI.mouse_event(up, X, Y, 0, 0);
                 }
-                WinAPI.mouse_event(up, X, Y, 0, 0);
             }
         }
         public class ChangeFile : Output

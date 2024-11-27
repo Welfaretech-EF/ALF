@@ -1,4 +1,4 @@
-﻿namespace FlexibleEyeController
+﻿namespace ALF
 {
     partial class frmSettings
     {

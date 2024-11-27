@@ -1,5 +1,5 @@
 ﻿
-namespace FlexibleEyeController
+namespace ALF
 {
     partial class OverlaySettings
     {
@@ -37,7 +37,7 @@ namespace FlexibleEyeController
             this.nudUnlockTime = new System.Windows.Forms.NumericUpDown();
             this.grpOutput = new System.Windows.Forms.GroupBox();
             this.txtFieldInfo = new System.Windows.Forms.TextBox();
-            this.pnlOutput = new FlexibleEyeController.EditablePanel();
+            this.pnlOutput = new ALF.EditablePanel();
             this.cmdAdd = new System.Windows.Forms.Button();
             this.lstOutputs = new System.Windows.Forms.ListBox();
             this.grpInput = new System.Windows.Forms.GroupBox();

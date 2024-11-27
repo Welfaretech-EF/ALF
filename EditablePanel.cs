@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlexibleEyeController
+namespace ALF
 {
     public partial class EditablePanel : UserControl
     {

@@ -1,5 +1,5 @@
 ﻿
-namespace FlexibleEyeController
+namespace ALF
 {
     partial class EditablePanel
     {

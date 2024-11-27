@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace FlexibleEyeController
+namespace ALF
 {
     public partial class Form1 : Form
     {
@@ -114,7 +114,7 @@ namespace FlexibleEyeController
                         }
                         catch (Nefarius.ViGEm.Client.Exceptions.VigemBusNotFoundException exNew)
                         {
-                            MessageBox.Show("Something went wrong - the driver is still missing!");
+                            MessageBox.Show("Something went wrong - the driver is still missing!\r\n" + exNew.Message);
                         }
                     }
                 }
@@ -428,7 +428,7 @@ namespace FlexibleEyeController
             if (lstPages.SelectedItem != null)
                 ((Page)lstPages.SelectedItem).Play(chkEnableOverlays.Checked);
         }
-        SaveFileDialog sfd = new SaveFileDialog() { Filter = "XML Files | *.xml",InitialDirectory = Application.StartupPath};
+        SaveFileDialog sfd = new SaveFileDialog() { Filter = "ALF Files|*.alf",InitialDirectory = Application.StartupPath};
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (sfd.ShowDialog() == DialogResult.OK)
@@ -442,7 +442,7 @@ namespace FlexibleEyeController
             }
         }
 
-        OpenFileDialog ofd = new OpenFileDialog() { Filter = "XML Files | *.xml" };
+        OpenFileDialog ofd = new OpenFileDialog() { Filter = "ALF Files|*.alf" };
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (ofd.ShowDialog() == DialogResult.OK)

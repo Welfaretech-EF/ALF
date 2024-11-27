@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using System.Runtime.InteropServices;
-namespace FlexibleEyeController
+namespace ALF
 {
     public class Overlay
     {
@@ -380,12 +380,14 @@ namespace FlexibleEyeController
             frm.Opacity = 1 - Transparency / 100.0;
             frm.SetLabel(Description == "" && outputs.Length != 0 ? outputs[0].DefaultToString() : Description);
 
-            Bitmap bmp = new Bitmap(256, 256);
+            int w = Math.Max(64, (int)Math.Round(Math.Pow(2, Math.Ceiling(Math.Log(frm.Width, 2) - 2))));
+            int h = Math.Max(64, (int)Math.Round(Math.Pow(2, Math.Ceiling(Math.Log(frm.Height, 2) - 2))));
+            Bitmap bmp = new Bitmap(w, h);
             using (Graphics g = Graphics.FromImage(bmp))
             {
                 g.Clear(Color.Transparent);
                 if (Circular)
-                    g.FillEllipse(brushIdle, 0, 0, 255, 255);
+                    g.FillEllipse(brushIdle, 0, 0, w, h);
                 else
                     g.Clear(colorIdle);
             }
@@ -429,7 +431,7 @@ namespace FlexibleEyeController
             startWatch = DateTime.Now;
             goalWatch = startWatch.AddMilliseconds(UnlockTime);
         }
-        void onFocus(Graphics g)
+        void onFocus(Graphics g,int Width,int Height)
         {
             fixation = true;
             if (startWatch != DateTime.MinValue)
@@ -443,9 +445,9 @@ namespace FlexibleEyeController
                 else
                 {
                     if (Circular)
-                        g.FillEllipse(brushWaiting, 256 * missingPct / 2, 256 * missingPct / 2, 256 * (1 - missingPct), 256 * (1 - missingPct));
+                        g.FillEllipse(brushWaiting, Width * missingPct / 2, Height* missingPct / 2, Width * (1 - missingPct), Height * (1 - missingPct));
                     else
-                        g.FillRectangle(brushWaiting, 0, 256 * missingPct, 256, 256 * (1 - missingPct));
+                        g.FillRectangle(brushWaiting, 0, Height* missingPct, Width, Height* (1 - missingPct));
                 }
             }
         }
@@ -482,11 +484,14 @@ namespace FlexibleEyeController
         {
             if (frm == null)
                 return;
-            Bitmap bmp = new Bitmap(256, 256);
+
+            int w = Math.Max(64, (int)Math.Round(Math.Pow(2, Math.Ceiling(Math.Log(frm.Width, 2)-2))));
+            int h = Math.Max(64, (int)Math.Round(Math.Pow(2, Math.Ceiling(Math.Log(frm.Height, 2)-2))));
+            Bitmap bmp = new Bitmap(w, h);
             using (Graphics g = Graphics.FromImage(bmp))
             {
                 if (Circular)
-                    g.FillEllipse(Active ? brushActive : brushIdle, 0, 0, 255, 255);
+                    g.FillEllipse(Active ? brushActive : brushIdle, 0, 0, bmp.Width, bmp.Height);
                 else
                     g.Clear(Active ? colorActive : colorIdle);
                 if ((Circular && (MDOL.Extension.Sqr((X - (frm.Left + frm.Width / 2)) / (frm.Width / 2)) + MDOL.Extension.Sqr((Y - (frm.Top + frm.Height / 2)) / (frm.Height / 2))) < 1) ||
@@ -494,7 +499,7 @@ namespace FlexibleEyeController
                 {
                     if (!fixation)
                         onEnter();
-                    onFocus(g);
+                    onFocus(g,w,h);
                 }
                 else if(fixation)
                     onExit();
@@ -502,7 +507,7 @@ namespace FlexibleEyeController
                 {
                     if (Circular)
                     {
-                        g.DrawLine(CircularLine, 127, 127, (float)(X - frm.Left) / frm.Width * 256, (float)(Y - frm.Top) / frm.Height * 256);
+                        g.DrawLine(CircularLine, bmp.Width/2, bmp.Height/2, (float)(X - frm.Left) / frm.Width * bmp.Width, (float)(Y - frm.Top) / frm.Height * bmp.Height);
                         PointF direction = new PointF((float)(X - frm.Left - frm.Width / 2) / (frm.Width / 2), (float)(Y - frm.Top - frm.Height / 2) / (frm.Height / 2));
                         direction.X = Math.Min(1, Math.Max(-1, direction.X * (CircularX / 100f)));
                         direction.Y = Math.Min(1, Math.Max(-1, direction.Y * (CircularY / 100f)));

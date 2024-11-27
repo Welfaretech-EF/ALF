@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Threading;
 
-namespace FlexibleEyeController
+namespace ALF
 {
     public abstract class Output
     {
@@ -53,7 +53,7 @@ namespace FlexibleEyeController
                     {
                         File = new System.Windows.Forms.OpenFileDialog()
                         {
-                            Filter = "XML Files | *.xml",
+                            Filter = "ALF Files|*.alf",
                             FileName = xml.getString("File", "")
                         }
                     };
@@ -302,7 +302,7 @@ namespace FlexibleEyeController
             {
                 return "Click on the button, to choose which overlay-file is loaded";
             }
-            public System.Windows.Forms.OpenFileDialog File = new System.Windows.Forms.OpenFileDialog() { Filter = "XML Files | *.xml" };
+            public System.Windows.Forms.OpenFileDialog File = new System.Windows.Forms.OpenFileDialog() { Filter = "ALF Files|*.alf" };
             protected override void activate()
             {
                 Form1.FORM1.LoadFile(File.FileName);

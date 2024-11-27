@@ -1,5 +1,5 @@
 ﻿
-namespace FlexibleEyeController
+namespace ALF
 {
     partial class Form1
     {
@@ -36,11 +36,11 @@ namespace FlexibleEyeController
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpPage = new System.Windows.Forms.GroupBox();
             this.txtPageName = new System.Windows.Forms.TextBox();
             this.cmdAdd = new System.Windows.Forms.Button();
             this.lstPages = new System.Windows.Forms.ListBox();
-            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.grpPage.SuspendLayout();
             this.SuspendLayout();
@@ -114,6 +114,12 @@ namespace FlexibleEyeController
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
+            // settingsToolStripMenuItem
+            // 
+            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(76, 24);
+            this.settingsToolStripMenuItem.Text = "Settings";
+            // 
             // grpPage
             // 
             this.grpPage.Controls.Add(this.txtPageName);
@@ -156,12 +162,6 @@ namespace FlexibleEyeController
             this.lstPages.Size = new System.Drawing.Size(417, 180);
             this.lstPages.TabIndex = 6;
             // 
-            // settingsToolStripMenuItem
-            // 
-            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(76, 24);
-            this.settingsToolStripMenuItem.Text = "Settings";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -176,7 +176,7 @@ namespace FlexibleEyeController
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Text = "Form1";
+            this.Text = "ALF";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.grpPage.ResumeLayout(false);

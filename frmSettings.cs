@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace FlexibleEyeController
+namespace ALF
 {
     public partial class frmSettings : Form
     {
@@ -23,7 +23,7 @@ namespace FlexibleEyeController
         }
         OpenFileDialog ofd = new OpenFileDialog()
         {
-            Filter = "XML Files (*.xml)|*.xml"
+            Filter = "ALF Files|*.alf"
         };
         public static void LoadSettings()
         {
@@ -67,6 +67,9 @@ namespace FlexibleEyeController
         public frmSettings()
         {
             InitializeComponent();
+
+            StartPosition = FormStartPosition.CenterParent;
+
             chkEnableGazeOnStartup.Checked = EnableOverlaysOnStartup;
             chkEnableGazeOnStartup.CheckedChanged += (s, e) =>
             {

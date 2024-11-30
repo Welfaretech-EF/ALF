@@ -26,6 +26,7 @@ namespace ALF
                     new MDOL.IO.XML("Height",MDOL.Extension.ToStringF(Bounds.Height))
                 ),
                 new MDOL.IO.XML("UnlockTime", UnlockTime.ToString()),
+                new MDOL.IO.XML("ToggleOnActivation", ToggleOnActivation.ToString()),
                 new MDOL.IO.XML("ColorIdle", colorIdle.Name),
                 new MDOL.IO.XML("ColorActive", colorActive.Name),
                 new MDOL.IO.XML("ColorWaiting", colorWaiting.Name),
@@ -373,7 +374,8 @@ namespace ALF
                 (int)(Bounds.Width * Screen.PrimaryScreen.Bounds.Width),
                 (int)(Bounds.Height * Screen.PrimaryScreen.Bounds.Height));
         }
-        void UpdateGUI()
+
+        public void UpdateGUI(bool selected = false)
         {
             if (frm == null)
                 return;
@@ -385,9 +387,17 @@ namespace ALF
             Bitmap bmp = new Bitmap(w, h);
             using (Graphics g = Graphics.FromImage(bmp))
             {
-                g.Clear(Color.Transparent);
                 if (Circular)
-                    g.FillEllipse(brushIdle, 0, 0, w, h);
+                {
+                    g.Clear(Color.Transparent);
+                    if (selected)
+                        g.FillEllipse(brushActive, 0, 0, w, h);
+                    else
+                        g.FillEllipse(brushIdle, 0, 0, w, h);
+                }
+                else
+                    if (selected)
+                    g.Clear(colorActive);
                 else
                     g.Clear(colorIdle);
             }

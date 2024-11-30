@@ -284,7 +284,7 @@ namespace ALF
             {
                 return Name;
             }
-            List<Overlay> Overlays = new List<Overlay>();
+            public List<Overlay> Overlays = new List<Overlay>();
             public Page()
             {
                 Overlay prev = new Overlay()
@@ -406,10 +406,14 @@ namespace ALF
         {
             Overlay overlay = new Overlay();
             if (AddOverlay(overlay))
-            {
-                ((Page)lstPages.SelectedItem).Add(overlay);
                 overlay.Change();
-            }
+        }
+        public List<Overlay> CurrentOverlays()
+        {
+            if (lstPages.SelectedItem != null)
+                return ((Page)lstPages.SelectedItem).Overlays;
+            else
+                return null;
         }
         public bool AddOverlay(Overlay overlay)
         {

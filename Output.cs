@@ -40,6 +40,7 @@ namespace ALF
                         X = xml.getInt("X", -1),
                         Y = xml.getInt("Y", -1),
                         CenterClick = xml.getBool("CenterClick",false),
+                        DoubleClick = xml.getBool("DoubleClick", false),
                         Button = (System.Windows.Forms.MouseButtons)xml.getInt("Button", 0)
                     };
                 case "KeyPress":
@@ -226,6 +227,7 @@ namespace ALF
             public int X = -1;
             public int Y = -1;
             public bool CenterClick = false;
+            public bool DoubleClick = false;
             int down,up;
             public System.Windows.Forms.MouseButtons Button = System.Windows.Forms.MouseButtons.Left;
             protected override MDOL.IO.XML[] toxml()
@@ -233,6 +235,7 @@ namespace ALF
                 return new MDOL.IO.XML[]{
                     new MDOL.IO.XML("X", X.ToString()), new MDOL.IO.XML("Y", Y.ToString()),
                     new MDOL.IO.XML("CenterClick", CenterClick.ToString()),
+                    new MDOL.IO.XML("DoubleClick", DoubleClick.ToString()),
                     new MDOL.IO.XML("Button", ((int)Button).ToString())};
             }
             public override string DefaultToString()
@@ -274,8 +277,15 @@ namespace ALF
                     Y = (overlay.frm.Bounds.Bottom + overlay.frm.Bounds.Top) / 2;
                 }
                 WinAPI.SetCursorPos(X, Y);
-                if (down != -1)
+                if (down != -1) { 
                     WinAPI.mouse_event(down, X, Y, 0, 0);
+                    if (DoubleClick)
+                    {
+                        WinAPI.mouse_event(up, X, Y, 0, 0);
+                        Thread.Sleep(50);
+                        WinAPI.mouse_event(down, X, Y, 0, 0);
+                    }
+                }
             }
             protected override void deactivate()
             {

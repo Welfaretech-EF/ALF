@@ -1,27 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace ALF
 {
     public partial class OverlaySettings : Form
     {
+        List<Overlay> Overlays = new List<Overlay>();
         public OverlaySettings(Overlay overlay)
         {
             InitializeComponent();
+            Overlays.Add(overlay);
+            overlay.UpdateGUI(true);
+
+            Timer tmrSelect = new Timer();
+            tmrSelect.Interval = 50;
+            bool MouseDown = false;
+            tmrSelect.Tick += (s, e) =>
+            {
+                if (System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.LeftCtrl) && MouseButtons == MouseButtons.Left)
+                {
+                    if (!MouseDown)
+                    {
+                        MouseDown = true;
+                        foreach (Overlay candidate in Form1.FORM1.CurrentOverlays())
+                        {
+                            if (candidate.InsideForm(Cursor.Position.X, Cursor.Position.Y))
+                            {
+                                if (Overlays.Contains(candidate))
+                                {
+                                    Overlays.Remove(candidate);
+                                    candidate.UpdateGUI();
+                                }
+                                else
+                                {
+                                    Overlays.Add(candidate);
+                                    candidate.UpdateGUI(true);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                    MouseDown = false;
+            };
+            tmrSelect.Start();
 
             cmdSave.Click += (s, e) =>
               {
                   Close();
               };
-
             Color[] colors = new Color[] { Color.Black, Color.Gray, Color.Red, Color.Green, Color.Blue, Color.Cyan, Color.Magenta, Color.Yellow };
             cmbActivationColor.Items.AddRange(colors.Cast<object>().ToArray());
             cmbWaitColor.Items.AddRange(colors.Cast<object>().ToArray());
@@ -90,38 +121,50 @@ namespace ALF
               };
             FormClosing += (s, e) =>
               {
-                  overlay.outputs = lstOutputs.Items.Cast<Output>().ToArray();
+                  tmrSelect.Stop();
+                  foreach (Overlay overlays in Overlays)
+                  {
+                      overlays.UpdateGUI();
+                      overlays.outputs = lstOutputs.Items.Cast<Output>().ToArray();
+                  }
+                  Form1.FORM1.Save();
               };
             chkToggleOnActivation.CheckedChanged += (s, e) =>
               {
-                  overlay.ToggleOnActivation = chkToggleOnActivation.Checked;
+                  foreach (Overlay overlays in Overlays)
+                      overlays.ToggleOnActivation = chkToggleOnActivation.Checked;
               };
             chkCircular.CheckedChanged += (s, e) =>
             {
-                overlay.Circular = chkCircular.Checked;
+                foreach (Overlay overlays in Overlays)
+                    overlays.Circular = chkCircular.Checked;
             };
-            nudCircularX.ValueChanged+=(s,e)=>
+            nudCircularX.ValueChanged += (s, e) =>
             {
-                overlay.CircularX = (int)nudCircularX.Value;
+                foreach (Overlay overlays in Overlays)
+                    overlays.CircularX = (int)nudCircularX.Value;
             };
             nudCircularY.ValueChanged += (s, e) =>
             {
-                overlay.CircularY = (int)nudCircularY.Value;
+                foreach (Overlay overlays in Overlays)
+                    overlays.CircularY = (int)nudCircularY.Value;
             };
             nudUnlockTime.ValueChanged += (s, e) =>
             {
-                overlay.UnlockTime = (int)(nudUnlockTime.Value * 1000);
+                foreach (Overlay overlays in Overlays)
+                    overlays.UnlockTime = (int)(nudUnlockTime.Value * 1000);
             };
             txtDescription.TextChanged += (s, e) =>
             {
-                overlay.Description = txtDescription.Text;
+                foreach (Overlay overlays in Overlays)
+                    overlays.Description = txtDescription.Text;
             };
             cmdDelete.Click += (s, e) =>
               {
                   if (MessageBox.Show("Are you sure you want to remove this overlay?", "Remove Overlay?", MessageBoxButtons.YesNo) == DialogResult.Yes)
                   {
-                      Form1.FORM1.DeleteOverlay(overlay);
-                      Form1.FORM1.Save();
+                      foreach (Overlay overlays in Overlays)
+                          Form1.FORM1.DeleteOverlay(overlays);
                       Close();
                   }
               };
@@ -148,10 +191,13 @@ namespace ALF
               };
             cmdClone.Click += (s, e) =>
             {
-                Overlay clone = new Overlay(overlay.toXML("overlay"));
-                clone.Bounds.X += 0.1f;
-                clone.Bounds.Y += 0.1f;
-                Form1.FORM1.AddOverlay(clone);
+                foreach (Overlay overlays in Overlays)
+                {
+                    Overlay clone = new Overlay(overlays.toXML("overlay"));
+                    clone.Bounds.X += 0.1f;
+                    clone.Bounds.Y += 0.1f;
+                    Form1.FORM1.AddOverlay(clone);
+                }
             };
         }
         bool ignoreChange = false;

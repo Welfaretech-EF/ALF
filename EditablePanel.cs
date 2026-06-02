@@ -16,15 +16,15 @@ namespace ALF
         {
             Controls.Clear();
 
-            int h = 20;
+            int h = 30;
             int hSpace = 12;
             System.Reflection.FieldInfo[] fields = Item.GetType().GetFields();
             for (int i = 0; i < fields.Length; i++)
             {
                 Label label = new Label()
                 {
-                    Size = new Size(Width / 3, h),
-                    Location = new Point(12, (h + hSpace) * i + 12),
+                    Size = new Size(Width * 2 / 5, h),
+                    Location = new Point(hSpace, (h + hSpace) * i + hSpace),
                     Text = fields[i].Name.Replace('_', ' ').Replace("PS", "(").Replace("PE", ")"),
                 };
                 Controls.Add(label);
@@ -181,8 +181,8 @@ namespace ALF
                 if (control != null)
                 {
                     control.Tag = fields[i];
-                    control.Size = new Size(Width / 3, h);
-                    control.Location = new Point((int)(12 + Width / 3 * 1.5), (h + hSpace) * i + 12);
+                    control.Size = new Size(Width / 2, h);
+                    control.Location = new Point((int)(Width / 2), (h + hSpace) * i + hSpace);
                     Controls.Add(control);
                 }
             }

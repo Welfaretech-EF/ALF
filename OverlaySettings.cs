@@ -4,6 +4,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using static ALF.MDOL.IO;
 
 namespace ALF
 {
@@ -78,7 +79,10 @@ namespace ALF
             tmrCursor.Start();
 
             nudUnlockTime.Value = (decimal)(overlay.UnlockTime / 1000.0);
+            nudMaxActivationTime.Value = (decimal)(overlay.MaxActivationTime / 1000.0);
             chkToggleOnActivation.Checked = overlay.ToggleOnActivation;
+            chkAlwaysReady.Checked = overlay.AlwaysReady;
+            chkActivateOnBlink.Checked = overlay.ActivateOnBlink;
             chkCircular.Checked = overlay.Circular;
             nudCircularX.Value = overlay.CircularX;
             nudCircularY.Value = overlay.CircularY;
@@ -88,30 +92,11 @@ namespace ALF
             lstOutputs.Items.AddRange(overlay.outputs);
 
             cmdAdd.ContextMenu = new ContextMenu();
-            cmdAdd.ContextMenu.MenuItems.Add("MouseMove").Click += (s, e) =>
-              {
-                  AddOutput(new Output.MouseMove());
-              };
-            cmdAdd.ContextMenu.MenuItems.Add("MouseClick").Click += (s, e) =>
-            {
-                AddOutput(new Output.MouseClick());
-            };
-            cmdAdd.ContextMenu.MenuItems.Add("Key").Click += (s, e) =>
-            {
-                AddOutput(new Output.KeyPress());
-            };
-            cmdAdd.ContextMenu.MenuItems.Add("ChangeFile").Click += (s, e) =>
-            {
-                AddOutput(new Output.ChangeFile());
-            };
-            cmdAdd.ContextMenu.MenuItems.Add("ChangePage").Click += (s, e) =>
-            {
-                AddOutput(new Output.ChangePage());
-            };
-            cmdAdd.ContextMenu.MenuItems.Add("Joystick").Click += (s, e) =>
-            {
-                AddOutput(new Output.Joystick());
-            };
+            foreach(KeyValuePair<string,Func<MDOL.IO.XML,Output>> output in Output.Outputs)
+                cmdAdd.ContextMenu.MenuItems.Add(output.Key).Click += (s, e) =>
+                {
+                    AddOutput(output.Value(null));
+                };
             pnlOutput.OnChange += (s, e) =>
               {
                   ignoreChange = true;
@@ -122,11 +107,16 @@ namespace ALF
             FormClosing += (s, e) =>
               {
                   tmrSelect.Stop();
+                  MDOL.IO.XML[] outputs_xml = lstOutputs.Items.Cast<Output>().Select((output, i) => output.toXML("Output_" + i)).ToArray();
                   foreach (Overlay overlays in Overlays)
                   {
+                      Output[] outputs = new Output[outputs_xml.Length];
+                      for (int i = 0; i < outputs.Length; i++)
+                          outputs[i] = Output.fromXML(outputs_xml[i]);
+                      overlays.outputs = outputs;
                       overlays.UpdateGUI();
-                      overlays.outputs = lstOutputs.Items.Cast<Output>().ToArray();
                   }
+                  Overlays.Clear();
                   Form1.FORM1.Save();
               };
             chkToggleOnActivation.CheckedChanged += (s, e) =>
@@ -134,6 +124,16 @@ namespace ALF
                   foreach (Overlay overlays in Overlays)
                       overlays.ToggleOnActivation = chkToggleOnActivation.Checked;
               };
+            chkAlwaysReady.CheckedChanged += (s, e) =>
+            {
+                foreach (Overlay overlays in Overlays)
+                    overlays.AlwaysReady = chkAlwaysReady.Checked;
+            };
+            chkActivateOnBlink.CheckedChanged += (s, e) =>
+            {
+                foreach (Overlay overlays in Overlays)
+                    overlays.ActivateOnBlink = chkActivateOnBlink.Checked;
+            };
             chkCircular.CheckedChanged += (s, e) =>
             {
                 foreach (Overlay overlays in Overlays)
@@ -153,6 +153,11 @@ namespace ALF
             {
                 foreach (Overlay overlays in Overlays)
                     overlays.UnlockTime = (int)(nudUnlockTime.Value * 1000);
+            };
+            nudMaxActivationTime.ValueChanged += (s, e) =>
+            {
+                foreach (Overlay overlays in Overlays)
+                    overlays.MaxActivationTime = (int)(nudMaxActivationTime.Value * 1000);
             };
             txtDescription.TextChanged += (s, e) =>
             {
@@ -199,12 +204,88 @@ namespace ALF
                     Form1.FORM1.AddOverlay(clone);
                 }
             };
+            cmdSplit.Click += (s, e) =>
+            {
+                Form frm = new Form();
+                frm.FormBorderStyle = FormBorderStyle.FixedToolWindow;
+                frm.Bounds = new Rectangle(Screen.PrimaryScreen.Bounds.Width / 4, Screen.PrimaryScreen.Bounds.Height / 4, Screen.PrimaryScreen.Bounds.Width / 2, Screen.PrimaryScreen.Bounds.Height / 2);
+                int W = frm.Bounds.Width / 10;
+                int H = frm.Bounds.Height / 10;
+                Button[,] buttons = new Button[10, 10];
+                for (int R = 0; R < 10;R++)
+                    for (int C = 0; C < 10; C++)
+                    {
+                        buttons[R, C] = new Button()
+                        {
+                            Bounds = new Rectangle(C * W, R * H, W, H),
+                            Tag = new int[2] { R, C }
+                        };
+                        buttons[R, C].Click += (ss, ee) =>
+                        {
+                            int[] RC = (int[])((Button)ss).Tag;
+                            RectangleF bounds = overlay.Bounds;
+                            float w = bounds.Width / (RC[1] + 1);
+                            float h = bounds.Height / (RC[0] + 1);
+                            Overlays.Clear();
+                            for (int r = 0; r <= RC[0];r++)
+                                for (int c = 0; c <= RC[1]; c++)
+                                {
+                                    if (r == 0 && c == 0)
+                                    {
+                                        overlay.Bounds = new RectangleF(bounds.X, bounds.Y, w, h);
+                                        overlay.frm.Bounds = overlay.screenBounds();
+                                        Overlays.Add(overlay);
+                                    }
+                                    else
+                                    {
+                                        Overlay clone = new Overlay(overlay.toXML("overlay"));
+                                        clone.Bounds = new RectangleF(bounds.X + c * w, bounds.Y + r * h, w, h);
+                                        Form1.FORM1.AddOverlay(clone);
+                                        Overlays.Add(clone);
+                                    }
+                                }
+                            //Overlay overlay = new Overlay();
+                            frm.Close();
+                        };
+                        buttons[R, C].MouseMove += (ss, ee) =>
+                        {
+                            int[] RC = (int[])((Button)ss).Tag;
+                            for (int r = 0; r < 10;r++)
+                                for (int c = 0; c < 10; c++)
+                                {
+                                    int[] rc = (int[])buttons[r, c].Tag;
+                                    buttons[r, c].BackColor = rc[0] <= RC[0] && rc[1] <= RC[1] ? Color.Blue : SystemColors.Control;
+                                }
+                        };
+                        frm.Controls.Add(buttons[R,C]);
+                    }
+                frm.TopMost = true;
+                frm.ShowDialog();
+            };
         }
         bool ignoreChange = false;
         void AddOutput(Output output)
         {
             lstOutputs.Items.Add(output);
             lstOutputs.SelectedIndex = lstOutputs.Items.Count - 1;
+        }
+
+        OpenFileDialog ofd = new OpenFileDialog()
+        {
+            Filter = "Image Files|*.png;*.jpg",
+        };
+        private void cmdImage_Click(object sender, EventArgs e)
+        {
+            if(ofd.ShowDialog() == DialogResult.OK)
+            {
+                foreach (Overlay overlays in Overlays)
+                    overlays.ImageFile = ofd.FileName;
+            }
+            else
+            {
+                foreach (Overlay overlays in Overlays)
+                    overlays.ImageFile = null;
+            }
         }
     }
 }

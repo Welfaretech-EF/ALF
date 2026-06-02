@@ -26,16 +26,20 @@ namespace ALF
                     new MDOL.IO.XML("Height",MDOL.Extension.ToStringF(Bounds.Height))
                 ),
                 new MDOL.IO.XML("UnlockTime", UnlockTime.ToString()),
+                new MDOL.IO.XML("MaxActivationTime", MaxActivationTime.ToString()),
                 new MDOL.IO.XML("ToggleOnActivation", ToggleOnActivation.ToString()),
+                new MDOL.IO.XML("ActivateOnBlink", ActivateOnBlink.ToString()),
+                new MDOL.IO.XML("AlwaysReady", AlwaysReady.ToString()),
                 new MDOL.IO.XML("ColorIdle", colorIdle.Name),
                 new MDOL.IO.XML("ColorActive", colorActive.Name),
                 new MDOL.IO.XML("ColorWaiting", colorWaiting.Name),
                 new MDOL.IO.XML("Transparency", Transparency.ToString()),
+                new MDOL.IO.XML("ImageFile", ImageFile),
                 new MDOL.IO.XML("Circular", Circular.ToString()),
                 new MDOL.IO.XML("CircularX", CircularX.ToString()),
                 new MDOL.IO.XML("CircularY", CircularY.ToString()),
                 new MDOL.IO.XML("Description", Description),
-                new MDOL.IO.XML("nOutputs", outputs.Length.ToString())
+                new MDOL.IO.XML("nOutputs", outputs.Length.ToString()),
             }.Concat(outputs_xml).ToArray());
         }
 
@@ -43,11 +47,30 @@ namespace ALF
         DateTime goalWatch = DateTime.MinValue;
 
         public RectangleF Bounds = new RectangleF();
+        public bool ActivateOnBlink = false;
+        public bool AlwaysReady = false;
         public int UnlockTime = 0;
+        public int MaxActivationTime = 0;
         public bool Circular;
         public int Transparency = 50;
         public int CircularX = 100;
         public int CircularY = 100;
+        public string ImageFile = "";
+        string ImageFileLoaded = "";
+        Image image = null;
+        Image Image
+        {
+            get
+            {
+                if (image == null || ImageFileLoaded != ImageFile)
+                {
+                    image = Image.FromFile(ImageFile);
+                    ImageFileLoaded = ImageFile;
+                }
+                return image;
+            }
+        }
+
 
         Color colorIdle = Color.Gray;
         Brush brushIdle = Brushes.Gray;
@@ -93,7 +116,6 @@ namespace ALF
             }
         }
 
-
         public Output[] outputs = new Output[0];
         public Overlay(MDOL.IO.XML xml = null)
         {
@@ -101,11 +123,15 @@ namespace ALF
             if (xml != null)
             {
                 UnlockTime = xml.getInt("UnlockTime", 0);
+                MaxActivationTime = xml.getInt("MaxActivationTime", 0);
                 ToggleOnActivation = xml.getBool("ToggleOnActivation", false);
+                ActivateOnBlink = xml.getBool("ActivateOnBlink", false);
+                AlwaysReady = xml.getBool("AlwaysReady", false);
                 colorIdle = Color.FromName(xml.getString("ColorIdle", "Gray"));
                 colorActive = Color.FromName(xml.getString("ColorActive", "Blue"));
                 colorWaiting = Color.FromName(xml.getString("ColorWaiting", "Green"));
                 Transparency = xml.getInt("Transparency", 50);
+                ImageFile = xml.getString("ImageFile", "");
                 Circular = xml.getBool("Circular", false);
                 CircularX = xml.getInt("CircularX", 100);
                 CircularY = xml.getInt("CircularY", 100);
@@ -134,12 +160,12 @@ namespace ALF
         int GridX(int X)
         {
             int w = Screen.PrimaryScreen.Bounds.Width;
-            return frmSettings.GridSnap ? ((int)((double)gridSteps * X / w)) * w / gridSteps : X;
+            return frmSettings.GridSnap ? ((int)Math.Ceiling((double)(gridSteps-0.5) * X / w)) * w / gridSteps : X;
         }
         int GridY(int Y)
         {
             int h = Screen.PrimaryScreen.Bounds.Height;
-            return frmSettings.GridSnap ? ((int)((double)gridSteps * Y / h)) * h / gridSteps : Y;
+            return frmSettings.GridSnap ? ((int)Math.Ceiling((double)(gridSteps-0.5) * Y / h)) * h / gridSteps : Y;
         }
 
         public OverlayForm frm = null;
@@ -171,8 +197,13 @@ namespace ALF
 
             tmrMove.Tick += (s, e) =>
             {
-                if (mouseDownOffset != Point.Empty) {
-                    frm.Location = Grid(Cursor.Position.X - mouseDownOffset.X, Cursor.Position.Y - mouseDownOffset.Y);
+                if ((DateTime.Now - mouseDownTime).TotalMilliseconds < 100)
+                    return;
+                if (mouseDownOffset != Point.Empty)
+                {
+                    Point newLocation = Grid(Cursor.Position.X - mouseDownOffset.X, Cursor.Position.Y - mouseDownOffset.Y);
+                    Point diffLocation = new Point(newLocation.X-frm.Location.X, newLocation.Y - frm.Location.Y);
+                    frm.Location = new Point(frm.Location.X + diffLocation.X, frm.Location.Y + diffLocation.Y);
                 }
                 else
                 {
@@ -181,8 +212,8 @@ namespace ALF
                         bounds.Width = GridX(Cursor.Position.X - frm.Left);
                     else if (mouseDownWidth == -1)
                     {
-                        bounds.Width = frm.Right - Cursor.Position.X;
                         bounds.X = Cursor.Position.X;
+                        bounds.Width = frm.Right - Cursor.Position.X;
                     }
                     if (mouseDownHeight == 1)
                         bounds.Height = GridY(Cursor.Position.Y - frm.Top);
@@ -191,75 +222,31 @@ namespace ALF
                         bounds.Height = frm.Bottom - Cursor.Position.Y;
                         bounds.Y = Cursor.Position.Y;
                     }
+                    double ScaleX = bounds.Width / (double)frm.Bounds.Width;
+                    double ScaleY = bounds.Height / (double)frm.Bounds.Height;
                     frm.Bounds = bounds;
                 }
             };
-            double border = 0.05;
             frm.MouseMove += (s, e) =>
             {
-                float x = (float)e.Location.X / frm.Width;
-                float y = (float)e.Location.Y / frm.Height;
-                if (x > 1 - border && y > 1 - border || x < border && y < border)
-                    frm.Cursor = Cursors.SizeNWSE;
-                else if (x > 1 - border && y < border || x < border && y > 1 - border)
-                    frm.Cursor = Cursors.SizeNESW;
-                else if (x > 1 - border || x < border)
-                    frm.Cursor = Cursors.SizeWE;
-                else if (y > 1 - border || y < border)
-                    frm.Cursor = Cursors.SizeNS;
-                else
-                    frm.Cursor = Cursors.SizeAll;
-                UpdateGUI();
+                MouseMove(e.Location);
             };
             frm.MouseDown += (s, e) =>
             {
                 if (e.Button == MouseButtons.Left)
-                {
-                    float x = (float)e.Location.X / frm.Width;
-                    float y = (float)e.Location.Y / frm.Height;
-                    Point mouseDownScreen = frm.PointToScreen(e.Location);
-
-                    if (x > 1 - border)
-                        mouseDownWidth = 1;
-                    else if (x < border)
-                        mouseDownWidth = -1;
-                    else
-                        mouseDownWidth = 0;
-                    if (y > 1 - border)
-                        mouseDownHeight = 1;
-                    else if (y < border)
-                        mouseDownHeight = -1;
-                    else
-                        mouseDownHeight = 0;
-
-                    if (mouseDownWidth == 0 && mouseDownHeight == 0)
-                        mouseDownOffset = new Point(mouseDownScreen.X - frm.Left, mouseDownScreen.Y - frm.Top);
-                    tmrMove.Start();
-                }
+                    MouseDown(e.Location);
             };
             frm.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtons.Left)
-                {
-                    tmrMove.Stop();
-                    mouseDownOffset = Point.Empty;
-                    mouseDownHeight = 0;
-                    mouseDownWidth = 0;
-                    if (frm == null)
-                        return;
-                    Bounds = new RectangleF((float)frm.Bounds.X / Screen.PrimaryScreen.Bounds.Width,
-                        (float)frm.Bounds.Y / Screen.PrimaryScreen.Bounds.Height,
-                        (float)frm.Bounds.Width / Screen.PrimaryScreen.Bounds.Width,
-                        (float)frm.Bounds.Height / Screen.PrimaryScreen.Bounds.Height);
-                    saveBounds();
-                }
+                    MouseUp();
             };
             frm.DoubleClick += (s, e) =>
             {
                 Change();
             };
         }
-        void saveBounds()
+        public void saveBounds()
         {
             Bounds = new RectangleF((float)frm.Bounds.X / Screen.PrimaryScreen.Bounds.Width,
                       (float)frm.Bounds.Y / Screen.PrimaryScreen.Bounds.Height,
@@ -268,8 +255,9 @@ namespace ALF
             Form1.FORM1.Save();
         }
         int mouseDownHeight = 0, mouseDownWidth = 0;
+        DateTime mouseDownTime = DateTime.MinValue;
         Point mouseDownOffset = Point.Empty;
-        double border = 0.05;
+        double border = 0.1;
         void MouseDownGlobal(Point XY)
         {
             MouseDown(frm.PointToClient(XY));
@@ -286,22 +274,29 @@ namespace ALF
         {
             float x = (float)XY.X / frm.Width;
             float y = (float)XY.Y / frm.Height;
-            {
-                if (x > 1 - border && y > 1 - border || x < border && y < border)
-                    frm.Cursor = Cursors.SizeNWSE;
-                else if (x > 1 - border && y < border || x < border && y > 1 - border)
-                    frm.Cursor = Cursors.SizeNESW;
-                else if (x > 1 - border || x < border)
-                    frm.Cursor = Cursors.SizeWE;
-                else if (y > 1 - border || y < border)
-                    frm.Cursor = Cursors.SizeNS;
-                else
-                    frm.Cursor = Cursors.SizeAll;
-                UpdateGUI();
-            }
+            if (x > 1 - border && y > 1 - border)
+                frm.Cursor = Cursors.SizeNWSE;
+            else if (x > 1 - border)
+                frm.Cursor = Cursors.SizeWE;
+            else if (y > 1 - border)
+                frm.Cursor = Cursors.SizeNS;
+            else
+                frm.Cursor = Cursors.SizeAll;
+            if (x > 1 - border && y > 1 - border || x < border && y < border)
+                frm.Cursor = Cursors.SizeNWSE;
+            else if (x > 1 - border && y < border || x < border && y > 1 - border)
+                frm.Cursor = Cursors.SizeNESW;
+            else if (x > 1 - border || x < border)
+                frm.Cursor = Cursors.SizeWE;
+            else if (y > 1 - border || y < border)
+                frm.Cursor = Cursors.SizeNS;
+            else
+                frm.Cursor = Cursors.SizeAll;
+            UpdateGUI();
         }
         void MouseDown(Point XY)
         {
+            mouseDownTime = DateTime.Now;
             float x = (float)XY.X / frm.Width;
             float y = (float)XY.Y / frm.Height;
             Point mouseDownScreen = frm.PointToScreen(XY);
@@ -366,7 +361,7 @@ namespace ALF
             isEditing = false;
             UpdateGUI();
         }
-        Rectangle screenBounds()
+        public Rectangle screenBounds()
         {
             return new Rectangle(
                 (int)(Bounds.X * Screen.PrimaryScreen.Bounds.Width),
@@ -396,10 +391,14 @@ namespace ALF
                         g.FillEllipse(brushIdle, 0, 0, w, h);
                 }
                 else
+                {
                     if (selected)
-                    g.Clear(colorActive);
-                else
-                    g.Clear(colorIdle);
+                        g.Clear(colorActive);
+                    else
+                        g.Clear(colorIdle);
+                    if(ImageFile != null && ImageFile != "")
+                        g.DrawImage(Image, new Rectangle(0,0,bmp.Width,bmp.Height));
+                }
             }
             MDOL.Helper.SetImage(frm, bmp);
         }
@@ -429,12 +428,15 @@ namespace ALF
 
         bool fixation = false;
         bool Active = false;
+        DateTime activationTime;
         void Activate()
         {
             if (ToggleOnActivation)
                 Active = !Active;
             else
                 Active = true;
+            if(Active)
+                activationTime = DateTime.Now;
         }
         void onEnter()
         {
@@ -457,7 +459,12 @@ namespace ALF
                     if (Circular)
                         g.FillEllipse(brushWaiting, Width * missingPct / 2, Height* missingPct / 2, Width * (1 - missingPct), Height * (1 - missingPct));
                     else
-                        g.FillRectangle(brushWaiting, 0, Height* missingPct, Width, Height* (1 - missingPct));
+                    {
+                        int w = (int)(Width * (1 - missingPct));
+                        int h = (int)(Height * (1 - missingPct));
+                        g.FillRectangle(brushWaiting, (Width-w)/2, (Height - h) / 2, w, h);
+                        //g.FillRectangle(brushWaiting, 0, Height* missingPct, Width, Height* (1 - missingPct));
+                    }
                 }
             }
         }
@@ -467,11 +474,13 @@ namespace ALF
             startWatch = DateTime.MinValue;
             if (!ToggleOnActivation)
                 Active = false;
+            if (!Active)
+                activationTime = DateTime.MinValue;
         }
         Pen CircularLine = new Pen(Brushes.White, 4);
         public bool InsideForm(double X, double Y)
         {
-            return Y >= frm.Top && Y <= frm.Bottom && X >= frm.Left && X <= frm.Right;
+            return frm != null && Y >= frm.Top && Y <= frm.Bottom && X >= frm.Left && X <= frm.Right;
         }
         public bool CtrlDown(Point XY)
         {
@@ -490,35 +499,44 @@ namespace ALF
         {
             MouseUpGlobal();
         }
-        public void Tobii(double X, double Y)
+        bool changeBmp = false;
+        bool changeBmpPrev = true;
+        public void XYPoint(XYDevice.XYPoint XY)
         {
             if (frm == null)
                 return;
 
-            int w = Math.Max(64, (int)Math.Round(Math.Pow(2, Math.Ceiling(Math.Log(frm.Width, 2)-2))));
-            int h = Math.Max(64, (int)Math.Round(Math.Pow(2, Math.Ceiling(Math.Log(frm.Height, 2)-2))));
+            int w = Math.Max(64, (int)Math.Round(Math.Pow(2, Math.Ceiling(Math.Log(frm.Width, 2) - 2))));
+            int h = Math.Max(64, (int)Math.Round(Math.Pow(2, Math.Ceiling(Math.Log(frm.Height, 2) - 2))));
             Bitmap bmp = new Bitmap(w, h);
             using (Graphics g = Graphics.FromImage(bmp))
             {
+                changeBmp = false;
                 if (Circular)
                     g.FillEllipse(Active ? brushActive : brushIdle, 0, 0, bmp.Width, bmp.Height);
                 else
                     g.Clear(Active ? colorActive : colorIdle);
-                if ((Circular && (MDOL.Extension.Sqr((X - (frm.Left + frm.Width / 2)) / (frm.Width / 2)) + MDOL.Extension.Sqr((Y - (frm.Top + frm.Height / 2)) / (frm.Height / 2))) < 1) ||
-                    (!Circular && InsideForm(X,Y)))
+                  if ((Circular && (MDOL.Extension.Sqr((XY.X - (frm.Left + frm.Width / 2)) / (frm.Width / 2)) + MDOL.Extension.Sqr((XY.Y - (frm.Top + frm.Height / 2)) / (frm.Height / 2))) < 1) ||
+                    (!Circular && InsideForm(XY.X, XY.Y)) ||
+                    ActivateOnBlink & DateTime.Now.Ticks-XY.lastBlink < 2500000)
                 {
                     if (!fixation)
                         onEnter();
-                    onFocus(g,w,h);
+                    onFocus(g, w, h);
+                    changeBmp = true;
                 }
-                else if(fixation)
-                    onExit();
-                if (Active)
+                else if (fixation)
                 {
+                    onExit();
+                    changeBmp = true;
+                }
+                if (Active && MaxActivationTime == 0 || (activationTime != DateTime.MinValue && (DateTime.Now - activationTime).TotalMilliseconds <= MaxActivationTime))
+                {
+                    changeBmp = true;
                     if (Circular)
                     {
-                        g.DrawLine(CircularLine, bmp.Width/2, bmp.Height/2, (float)(X - frm.Left) / frm.Width * bmp.Width, (float)(Y - frm.Top) / frm.Height * bmp.Height);
-                        PointF direction = new PointF((float)(X - frm.Left - frm.Width / 2) / (frm.Width / 2), (float)(Y - frm.Top - frm.Height / 2) / (frm.Height / 2));
+                        g.DrawLine(CircularLine, bmp.Width / 2, bmp.Height / 2, (float)(XY.X - frm.Left) / frm.Width * bmp.Width, (float)(XY.Y - frm.Top) / frm.Height * bmp.Height);
+                        PointF direction = new PointF((float)(XY.X - frm.Left - frm.Width / 2) / (frm.Width / 2), (float)(XY.Y - frm.Top - frm.Height / 2) / (frm.Height / 2));
                         direction.X = Math.Min(1, Math.Max(-1, direction.X * (CircularX / 100f)));
                         direction.Y = Math.Min(1, Math.Max(-1, direction.Y * (CircularY / 100f)));
                         foreach (Output output in outputs)
@@ -530,12 +548,25 @@ namespace ALF
                             output.Activate(this);
                     }
                 }
+                else if (Active && ToggleOnActivation && MaxActivationTime != 0 && activationTime != DateTime.MinValue && (DateTime.Now - activationTime).TotalMilliseconds > MaxActivationTime)
+                {
+                    changeBmp = true;
+                    Active = false;
+                }
                 else
+                {
                     foreach (Output output in outputs)
                         output.Deactivate();
+                }
+                if (ImageFile != null && ImageFile != "")
+                    g.DrawImage(Image, new Rectangle(0, 0, bmp.Width, bmp.Height));
             }
             if (frm != null)
-                MDOL.Helper.SetImage(frm, bmp);
+            {
+                if(changeBmp || changeBmp != changeBmpPrev)
+                    MDOL.Helper.SetImage(frm, bmp);
+                changeBmpPrev = changeBmp;
+            }
         }
     }
 }

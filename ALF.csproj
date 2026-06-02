@@ -13,9 +13,11 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +25,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -57,12 +59,46 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AForge.Video">
+      <HintPath>..\..\ThirdParty\AForgeNet\Release\AForge.Video.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Video.DirectShow">
+      <HintPath>..\..\ThirdParty\AForgeNet\Release\AForge.Video.DirectShow.dll</HintPath>
+    </Reference>
+    <Reference Include="DlibDotNet">
+      <HintPath>..\FaceSwap\bin\Debug\DlibDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="H.InputSimulator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=603f13207e65c17b, processorArchitecture=MSIL">
+      <HintPath>packages\H.InputSimulator.1.5.0\lib\net462\H.InputSimulator.dll</HintPath>
+    </Reference>
     <Reference Include="Nefarius.ViGEm.Client, Version=1.21.256.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Nefarius.ViGEm.Client.1.21.256\lib\netstandard2.0\Nefarius.ViGEm.Client.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="SharpHook, Version=7.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\SharpHook.7.1.1\lib\net472\SharpHook.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Buffers.4.6.0\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Drawing.Common.10.0.3\lib\net462\System.Drawing.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Management" />
+    <Reference Include="System.Memory, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Memory.4.6.0\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Numerics.Vectors.4.6.0\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.1.0\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Speech" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -72,17 +108,18 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="Tobii.Interaction.Model, Version=0.7.3.333, Culture=neutral, PublicKeyToken=70326046dcdce6cb, processorArchitecture=MSIL">
+    <Reference Include="Tobii.Interaction.Model, Version=0.7.19.29983, Culture=neutral, PublicKeyToken=70326046dcdce6cb, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\..\Program Files\Tobii\Tobii EyeX\Tobii.Interaction.Model.dll</HintPath>
+      <HintPath>bin\Debug\Tobii.Interaction.Model.dll</HintPath>
     </Reference>
-    <Reference Include="Tobii.Interaction.Net, Version=0.7.3.333, Culture=neutral, PublicKeyToken=70326046dcdce6cb, processorArchitecture=MSIL">
+    <Reference Include="Tobii.Interaction.Net, Version=0.7.19.29983, Culture=neutral, PublicKeyToken=70326046dcdce6cb, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\..\Program Files\Tobii\Tobii EyeX\Tobii.Interaction.Net.dll</HintPath>
+      <HintPath>bin\Debug\Tobii.Interaction.Net.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BeamEyeTracker.cs" />
     <Compile Include="EditablePanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -94,6 +131,12 @@
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmAddMultiOverlay.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmAddMultiOverlay.Designer.cs">
+      <DependentUpon>frmAddMultiOverlay.cs</DependentUpon>
     </Compile>
     <Compile Include="frmSettings.cs">
       <SubType>Form</SubType>
@@ -119,8 +162,18 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WinAPI.cs" />
+    <Compile Include="XYDevice.cs" />
+    <Compile Include="XYForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="XYForm.Designer.cs">
+      <DependentUpon>XYForm.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmAddMultiOverlay.resx">
+      <DependentUpon>frmAddMultiOverlay.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmSettings.resx">
       <DependentUpon>frmSettings.cs</DependentUpon>
@@ -159,4 +212,15 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="packages\DlibDotNet.19.21.0.20220724\build\net45\DlibDotNet.targets" Condition="Exists('packages\DlibDotNet.19.21.0.20220724\build\net45\DlibDotNet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\DlibDotNet.19.21.0.20220724\build\net45\DlibDotNet.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\DlibDotNet.19.21.0.20220724\build\net45\DlibDotNet.targets'))" />
+    <Error Condition="!Exists('packages\Tobii.Research.x64.2.1.0.1\build\netstandard2.0\Tobii.Research.x64.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Tobii.Research.x64.2.1.0.1\build\netstandard2.0\Tobii.Research.x64.targets'))" />
+    <Error Condition="!Exists('packages\SharpHook.7.1.1\build\net472\SharpHook.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\SharpHook.7.1.1\build\net472\SharpHook.targets'))" />
+  </Target>
+  <Import Project="packages\Tobii.Research.x64.2.1.0.1\build\netstandard2.0\Tobii.Research.x64.targets" Condition="Exists('packages\Tobii.Research.x64.2.1.0.1\build\netstandard2.0\Tobii.Research.x64.targets')" />
+  <Import Project="packages\SharpHook.7.1.1\build\net472\SharpHook.targets" Condition="Exists('packages\SharpHook.7.1.1\build\net472\SharpHook.targets')" />
 </Project>

@@ -34,6 +34,13 @@ namespace ALF
         [DllImport("user32.dll")]
         public static extern int SetCursorPos(int x, int y);
 
+        [DllImport("user32.dll")]
+        public static extern bool GetCursorPos(out System.Drawing.Point p);
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr SetWindowsHookEx(int idHook,
+        LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+        public delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
+
         public const uint WS_EX_LAYERED = 0x00080000;
         public const uint WS_EX_TRANSPARENT = 0x00000020;
         [DllImport("user32.dll", SetLastError = true)]
@@ -50,8 +57,9 @@ namespace ALF
         public const int MOUSEEVENT_RIGHTUP = 0x0010;
         public const int MOUSEEVENT_MOVE = 0x0001;
         public const int MOUSEEVENT_ABSOLUTE = 0x8000;
+        public const int MOUSEEVENTF_WHEEL = 0x0800;
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-        public static extern void mouse_event(int dwFlags, int dx, int dy, uint cButtons, uint dwExtraInfo);
+        public static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
 
         [DllImport("user32.dll")]
         public static extern byte MapVirtualKey(int uCode, uint uMapType);

@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+﻿using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ALF
@@ -14,8 +8,10 @@ namespace ALF
     {
         public static bool EnableOverlaysOnStartup = false;
         public static bool GridSnap = false;
+        public static bool MouseAssist = false;
         public static bool LoadPrevious = true;
         public static string PrevFile = "";
+        public static int GazeScale = 100;
         static string FixedFile = "";
         public static string StartupFile
         {
@@ -23,7 +19,7 @@ namespace ALF
         }
         OpenFileDialog ofd = new OpenFileDialog()
         {
-            Filter = "ALF Files|*.alf"
+            Filter = "ALF Files|*.alf;*.xml"
         };
         public static void LoadSettings()
         {
@@ -41,6 +37,9 @@ namespace ALF
                         case "gridsnap":
                             GridSnap = bool.Parse(elements[1]);
                             break;
+                        case "mouseassist":
+                            MouseAssist = bool.Parse(elements[1]);
+                            break;
                         case "loadprevious":
                             LoadPrevious = bool.Parse(elements[1]);
                             break;
@@ -49,6 +48,12 @@ namespace ALF
                             break;
                         case "fixedfile":
                             FixedFile = elements[1];
+                            break;
+                        case "speechvoice":
+                            Output.Text2Speech.SelectVoice(elements[1]);
+                            break;
+                        case "gazescale":
+                            GazeScale = int.Parse(elements[1]);
                             break;
                     }
                 }
@@ -59,9 +64,12 @@ namespace ALF
             System.IO.File.WriteAllLines("Settings.conf", new string[] {
                 "EnableOverlaysOnStartup;" + EnableOverlaysOnStartup.ToString(),
                 "GridSnap;" + GridSnap.ToString(),
+                "MouseAssist;" + MouseAssist.ToString(),
                 "LoadPrevious;" + LoadPrevious.ToString(),
                 "PrevFile;" + PrevFile,
-                "FixedFile;" + FixedFile
+                "FixedFile;" + FixedFile,
+                "SpeechVoice;" + Output.Text2Speech.GetVoice().Name,
+                "GazeScale;" + GazeScale
             });
         }
         public frmSettings()
@@ -80,25 +88,51 @@ namespace ALF
             {
                 GridSnap = chkGridSnap.Checked;
             };
+            chkMouseAssist.Checked = MouseAssist;
+            chkMouseAssist.CheckedChanged += (s, e) =>
+            {
+                MouseAssist = chkMouseAssist.Checked;
+            };
+
             rdbLoadPrevious.Checked = LoadPrevious;
             rdbLoadFixed.Checked = !LoadPrevious;
             rdbLoadPrevious.CheckedChanged += (s, e) =>
             {
                 LoadPrevious = rdbLoadPrevious.Checked;
             };
-            lblFixed.Text = FixedFile;
+            lblFixed.Text = System.IO.Path.GetFileName(FixedFile);
             cmdSetFile.Click += (s, e) =>
             {
                 if(ofd.ShowDialog()== DialogResult.OK)
                 {
                     FixedFile = ofd.FileName;
-                    lblFixed.Text = FixedFile;
+                    lblFixed.Text = System.IO.Path.GetFileName(FixedFile);
                 }
             };
             FormClosing += (s, e) =>
             {
                 SaveSettings();
             };
+            System.Speech.Synthesis.InstalledVoice[] voices = Output.Text2Speech.GetVoices();
+            if (voices.Length > 0)
+            {
+                cmbVoices.Items.AddRange(voices.Select(voice => voice.VoiceInfo.Name + "(" + voice.VoiceInfo.Culture.Name + ")").ToArray());
+                for (int i = 0; i < voices.Length; i++)
+                    if (Output.Text2Speech.GetVoice().Name == voices[i].VoiceInfo.Name)
+                    {
+                        cmbVoices.SelectedIndex = i;
+                        break;
+                    }
+                cmbVoices.SelectedIndexChanged += (s, e) =>
+                {
+                    Output.Text2Speech.SelectVoice(voices[cmbVoices.SelectedIndex].VoiceInfo.Name);
+                };
+            }
+            nudGazeScale.Value = GazeScale;
+            nudGazeScale.ValueChanged += (s, e) =>
+            {
+                GazeScale = (int)nudGazeScale.Value;
+            };  
         }
     }
 }

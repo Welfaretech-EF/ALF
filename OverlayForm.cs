@@ -35,11 +35,15 @@ namespace ALF
             };
             lblDescription.MouseUp += (s, e) =>
             {
-                OnMouseUp(e);
+                OnMouseUp(new MouseEventArgs(e.Button, e.Clicks, e.X + lblDescription.Left, e.Y + lblDescription.Top, e.Delta));
             };
             lblDescription.DoubleClick += (s, e) =>
             {
                 OnDoubleClick(e);
+            };
+            lblDescription.MouseMove += (s, e) =>
+            {
+                OnMouseMove(new MouseEventArgs(e.Button, e.Clicks, e.X + lblDescription.Left, e.Y + lblDescription.Top, e.Delta));
             };
         }
         public void SetLabel(string str)

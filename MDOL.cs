@@ -10,6 +10,23 @@ namespace ALF
     {
         public static class Extension
         {
+            public static byte[] ToByte(System.Drawing.Bitmap bmp)
+            {
+                System.Drawing.Imaging.BitmapData bmpData = bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, bmp.PixelFormat);
+                byte[] data = new byte[bmpData.Stride * bmpData.Height];
+                int pixelSize = bmpData.Stride / bmpData.Width;
+                System.Runtime.InteropServices.Marshal.Copy(bmpData.Scan0, data, 0, data.Length);
+                bmp.UnlockBits(bmpData);
+                if (bmpData.Width * pixelSize != bmpData.Stride)
+                {
+                    byte[] dataNew = new byte[bmpData.Width * pixelSize * bmpData.Height];
+                    for (int r = 0; r < bmpData.Height; r++)
+                        Buffer.BlockCopy(data, r * bmpData.Stride, dataNew, r * bmpData.Width * pixelSize, bmpData.Width * pixelSize);
+                    return dataNew;
+                }
+                return data;
+            }
+
             static System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.InvariantCulture;
             public static float ToFloat(string text)
             {
